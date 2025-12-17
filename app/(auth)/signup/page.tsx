@@ -3,22 +3,18 @@ import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 
 export default async function SignupPage() {
-  const user = await getSession()
+    const user = await getSession()
 
-  // Redirect if already logged in
-  if (user) {
-    if (user.role === "admin") {
-      redirect("/admin")
-    } else if (user.role === "expert" || user.isExpert) {
-      redirect("/expert")
-    } else {
-      redirect("/dashboard")
+    // Redirect if already logged in
+    if (user) {
+        if (user.role === "admin") {
+            redirect("/admin")
+        } else if (user.role === "expert" || user.isExpert) {
+            redirect("/expert")
+        } else {
+            redirect("/dashboard")
+        }
     }
-  }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <SignupForm />
-    </div>
-  )
+    return <SignupForm />
 }
