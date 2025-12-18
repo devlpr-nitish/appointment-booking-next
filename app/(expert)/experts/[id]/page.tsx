@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, Star, Calendar, DollarSign } from "lucide-react"
 import Image from "next/image"
-import { BookingButton } from "@/components/booking/booking-button"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 interface ExpertProfilePageProps {
   params: Promise<{ id: string }>
@@ -57,7 +58,14 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                     </div>
                   </div>
 
-                  <BookingButton expert={expert} />
+                  <div className="flex gap-4">
+                    <Button asChild size="lg" className="w-full md:w-auto">
+                      <Link href={`/experts/${expert.id}/book`}>
+                        <Calendar className="mr-2 h-5 w-5" />
+                        Book a Session
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>

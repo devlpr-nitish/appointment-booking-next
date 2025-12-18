@@ -1,4 +1,12 @@
 // Mock expert data (replace with real database in production)
+export interface Review {
+    id: string
+    author: string
+    rating: number
+    comment: string
+    date: string
+}
+
 export interface Expert {
     id: string
     userId: string
@@ -11,6 +19,7 @@ export interface Expert {
     totalSessions: number
     verified: boolean
     imageUrl: string
+    reviews: Review[]
 }
 
 export const mockExperts: Expert[] = [
@@ -26,6 +35,22 @@ export const mockExperts: Expert[] = [
         totalSessions: 124,
         verified: true,
         imageUrl: "/professional-woman-diverse.png",
+        reviews: [
+            {
+                id: "rev_1",
+                author: "John Doe",
+                rating: 5,
+                comment: "Sarah provided excellent strategic advice that helped us pivot successfully.",
+                date: "2023-11-15",
+            },
+            {
+                id: "rev_2",
+                author: "Jane Smith",
+                rating: 4.8,
+                comment: "Very knowledgeable and professional. Highly recommended.",
+                date: "2023-10-20",
+            },
+        ],
     },
     {
         id: "exp_2",
@@ -39,6 +64,15 @@ export const mockExperts: Expert[] = [
         totalSessions: 98,
         verified: true,
         imageUrl: "/professional-engineer.png",
+        reviews: [
+            {
+                id: "rev_3",
+                author: "Robert Brown",
+                rating: 5,
+                comment: "Michael helped me solve a complex architectural issue in just one session.",
+                date: "2023-11-05",
+            },
+        ],
     },
     {
         id: "exp_3",
@@ -52,6 +86,7 @@ export const mockExperts: Expert[] = [
         totalSessions: 156,
         verified: true,
         imageUrl: "/professional-woman-marketing.png",
+        reviews: [],
     },
     {
         id: "exp_4",
@@ -65,6 +100,7 @@ export const mockExperts: Expert[] = [
         totalSessions: 87,
         verified: true,
         imageUrl: "/professional-man-designer.png",
+        reviews: [],
     },
     {
         id: "exp_5",
@@ -78,6 +114,7 @@ export const mockExperts: Expert[] = [
         totalSessions: 203,
         verified: true,
         imageUrl: "/professional-woman-coach.png",
+        reviews: [],
     },
     {
         id: "exp_6",
@@ -91,6 +128,7 @@ export const mockExperts: Expert[] = [
         totalSessions: 92,
         verified: true,
         imageUrl: "/professional-man-finance.png",
+        reviews: [],
     },
 ]
 

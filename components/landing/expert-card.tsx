@@ -43,9 +43,12 @@ export function ExpertCard({ expert }: ExpertCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter className="pt-0">
-        <Button asChild className="w-full">
+      <CardFooter className="pt-0 grid grid-cols-2 gap-3">
+        <Button asChild variant="outline" className="w-full">
           <Link href={`/experts/${expert.id}`}>View Profile</Link>
+        </Button>
+        <Button asChild className="w-full">
+          <Link href={`/experts/${expert.id}/book`}>Book Now</Link>
         </Button>
       </CardFooter>
     </Card>
