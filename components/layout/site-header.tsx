@@ -15,9 +15,9 @@ export function SiteHeader() {
                     <Link href="/" className="flex items-center gap-2">
                         {/* <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent" /> */}
                         {/* Using the generated logo. Assuming it's white, we might need a dark version for light mode header using invert filter or similar */}
-                        <div className="relative h-8 w-8 overflow-hidden">
+                        {/* <div className="relative h-8 w-8 overflow-hidden">
                             <img src="/logo.png" alt="Nexus Logo" className="h-full w-full object-contain invert dark:invert-0" />
-                        </div>
+                        </div> */}
                         <span className="text-xl font-bold">Nexus</span>
                     </Link>
 
