@@ -41,6 +41,12 @@ export function SiteHeader() {
                         >
                             Become an Expert
                         </Link>
+                        <Link
+                            href="/contact"
+                            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            Contact
+                        </Link>
                     </nav>
 
                     <div className="hidden md:flex md:items-center md:gap-4">
@@ -70,6 +76,9 @@ export function SiteHeader() {
                             </Link>
                             <Link href="/signup" className="text-sm font-medium text-muted-foreground hover:text-foreground">
                                 Become an Expert
+                            </Link>
+                            <Link href="/contact" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                                Contact
                             </Link>
                             <div className="flex flex-col gap-2 pt-4 border-t border-border/40">
                                 <Button variant="ghost" asChild className="w-full">
