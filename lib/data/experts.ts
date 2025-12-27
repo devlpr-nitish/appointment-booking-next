@@ -22,127 +22,125 @@ export interface Expert {
     reviews: Review[]
 }
 
-export const mockExperts: Expert[] = [
-    {
-        id: "exp_1",
-        userId: "user_1",
-        name: "Sarah Johnson",
-        email: "sarah@example.com",
-        expertise: "Business Strategy",
-        bio: "Former McKinsey consultant with 10+ years experience helping startups scale",
-        hourlyRate: 150,
-        rating: 4.9,
-        totalSessions: 124,
-        verified: true,
-        imageUrl: "/professional-woman-diverse.png",
-        reviews: [
-            {
-                id: "rev_1",
-                author: "John Doe",
-                rating: 5,
-                comment: "Sarah provided excellent strategic advice that helped us pivot successfully.",
-                date: "2023-11-15",
-            },
-            {
-                id: "rev_2",
-                author: "Jane Smith",
-                rating: 4.8,
-                comment: "Very knowledgeable and professional. Highly recommended.",
-                date: "2023-10-20",
-            },
-        ],
-    },
-    {
-        id: "exp_2",
-        userId: "user_2",
-        name: "Michael Chen",
-        email: "michael@example.com",
-        expertise: "Software Engineering",
-        bio: "Tech lead at major tech companies, specializing in system architecture",
-        hourlyRate: 120,
-        rating: 4.8,
-        totalSessions: 98,
-        verified: true,
-        imageUrl: "/professional-engineer.png",
-        reviews: [
-            {
-                id: "rev_3",
-                author: "Robert Brown",
-                rating: 5,
-                comment: "Michael helped me solve a complex architectural issue in just one session.",
-                date: "2023-11-05",
-            },
-        ],
-    },
-    {
-        id: "exp_3",
-        userId: "user_3",
-        name: "Emily Rodriguez",
-        email: "emily@example.com",
-        expertise: "Marketing & Growth",
-        bio: "Growth marketing expert who scaled multiple companies to 7 figures",
-        hourlyRate: 130,
-        rating: 5.0,
-        totalSessions: 156,
-        verified: true,
-        imageUrl: "/professional-woman-marketing.png",
-        reviews: [],
-    },
-    {
-        id: "exp_4",
-        userId: "user_4",
-        name: "David Kim",
-        email: "david@example.com",
-        expertise: "Product Design",
-        bio: "Award-winning designer with experience at top design agencies",
-        hourlyRate: 140,
-        rating: 4.9,
-        totalSessions: 87,
-        verified: true,
-        imageUrl: "/professional-man-designer.png",
-        reviews: [],
-    },
-    {
-        id: "exp_5",
-        userId: "user_5",
-        name: "Lisa Thompson",
-        email: "lisa@example.com",
-        expertise: "Career Coaching",
-        bio: "Career coach helping professionals transition into tech roles",
-        hourlyRate: 100,
-        rating: 4.7,
-        totalSessions: 203,
-        verified: true,
-        imageUrl: "/professional-woman-coach.png",
-        reviews: [],
-    },
-    {
-        id: "exp_6",
-        userId: "user_6",
-        name: "James Wilson",
-        email: "james@example.com",
-        expertise: "Finance & Investing",
-        bio: "Financial advisor specializing in startup funding and investment strategies",
-        hourlyRate: 160,
-        rating: 4.8,
-        totalSessions: 92,
-        verified: true,
-        imageUrl: "/professional-man-finance.png",
-        reviews: [],
-    },
-]
 
-export async function getExperts(): Promise<Expert[]> {
-    // In production, fetch from database
-    return mockExperts
+import { cookies } from "next/headers"
+import { API_BASE_URL } from "@/lib/config"
+
+// ... (existing interfaces)
+
+interface ExpertsApiResponse {
+    success: boolean
+    message: string
+    data: {
+        experts: any[] // We can refine this type later based on exact backend shape
+        meta: {
+            current_page: number
+            total_pages: number
+            total_items: number
+            limit: number
+        }
+    }
+}
+
+export async function getExpertsPaginated(page = 1, limit = 10, category?: string): Promise<{ experts: Expert[], meta: ExpertsApiResponse['data']['meta'] }> {
+    try {
+        const cookieStore = await cookies()
+        const token = cookieStore.get("token")?.value
+
+        const headers: HeadersInit = {}
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`
+        }
+
+        let url = `${API_BASE_URL}/expert/get-experts?page=${page}&limit=${limit}`
+        let isSearch = false
+
+        if (category && category !== 'all') {
+            url = `${API_BASE_URL}/expert/search?category=${category}`
+            isSearch = true
+        }
+
+        const res = await fetch(url, {
+            method: "GET",
+            headers: headers,
+            cache: 'no-store' // Ensure fresh data
+        })
+
+        console.log("res", res);
+
+        if (!res.ok) {
+            console.error("Failed to fetch experts", await res.text())
+            // Fallback to mock data if API fails to avoid breaking UI during dev
+            return {
+                experts: [],
+                meta: {
+                    current_page: page,
+                    total_pages: 0,
+                    total_items: 0,
+                    limit: limit
+                }
+            }
+        }
+
+        const json = await res.json()
+
+        if (!json.success) {
+            throw new Error(json.message)
+        }
+
+        let rawExperts = []
+        let meta = {
+            current_page: page,
+            total_pages: 1,
+            total_items: 0,
+            limit: limit
+        }
+
+        if (isSearch) {
+            // Search endpoint returns data as an array of experts directly (inside json.data)
+            rawExperts = Array.isArray(json.data) ? json.data : []
+            meta.total_items = rawExperts.length
+            meta.total_pages = Math.ceil(rawExperts.length / limit)
+            // Manually paginate if the backend doesn't
+            const start = (page - 1) * limit
+            rawExperts = rawExperts.slice(start, start + limit)
+        } else {
+            // Standard paginated response
+            rawExperts = json.data.experts
+            meta = json.data.meta
+        }
+
+        const experts = rawExperts.map((item: any) => ({
+            id: item.id?.toString(),
+            userId: item.user_id?.toString() || "",
+            name: item.user?.name || "Unknown Expert",
+            email: item.user?.email || "",
+            expertise: item.expertise,
+            bio: item.bio,
+            hourlyRate: item.hourly_rate,
+            rating: 0, // Not yet in backend
+            totalSessions: 0, // Not yet in backend
+            verified: item.is_verified,
+            imageUrl: item.user?.image || "/placeholder-user.jpg", // Adapt if backend sends image
+            reviews: []
+        }))
+
+        return {
+            experts,
+            meta
+        }
+
+    } catch (error) {
+        console.error("Error fetching experts:", error)
+        // Fallback
+        return {
+            experts: [],
+            meta: { current_page: 1, total_pages: 1, total_items: 0, limit }
+        }
+    }
 }
 
 export async function getExpertById(id: string): Promise<Expert | null> {
     // In production, fetch from database
-    return mockExperts.find((expert) => expert.id === id) || null
-}
-
-export async function getFeaturedExperts(limit = 6): Promise<Expert[]> {
-    // In production, fetch featured experts from database
-    return mockExperts.slice(0, limit)
+    return null
 }

@@ -10,9 +10,32 @@ export interface User {
 
 import { redirect } from "next/navigation"
 
+import { cookies } from "next/headers"
+
 export async function getSession(): Promise<User | null> {
-    // TODO: Implement actual session retrieval
-    return null
+    const cookieStore = await cookies()
+    const token = cookieStore.get("token")?.value
+
+    if (!token) {
+        return null
+    }
+
+    try {
+        // Decode JWT payload (middle part)
+        const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
+
+        // Return user based on token
+        // Note: For now we default to "user" role and placeholder name/email 
+        // as they are not in the token. In a real app, we might fetch profile here.
+        return {
+            id: payload.user_id?.toString() || "1",
+            name: "User", // Placeholder
+            email: "user@example.com", // Placeholder
+            role: "user",
+        }
+    } catch (error) {
+        return null
+    }
 }
 
 export async function requireAuth(): Promise<User> {

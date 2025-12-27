@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 
+import { API_BASE_URL } from "@/lib/config"
+
 export function LoginForm() {
     const router = useRouter()
     const [email, setEmail] = useState("")
@@ -22,7 +24,7 @@ export function LoginForm() {
         setLoading(true)
 
         try {
-            const response = await fetch("/api/auth/login", {
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
@@ -30,20 +32,17 @@ export function LoginForm() {
 
             const data = await response.json()
 
-            if (!response.ok) {
-                setError(data.error || "Login failed")
+            if (!data.success) {
+                setError(data.error?.details || data.message || "Login failed")
                 return
             }
 
-            // Redirect based on role
-            if (data.user.role === "admin") {
-                router.push("/admin")
-            } else if (data.user.role === "expert" || data.user.isExpert) {
-                router.push("/expert")
-            } else {
-                router.push("/dashboard")
-            }
+            // Store token in cookie
+            document.cookie = `token=${data.data.token}; path=/; max-age=86400; SameSite=Strict`
 
+            // Redirect based on role (defaulting to dashboard since role is not in response yet)
+            // In a real app, we would decode the token or fetch user profile here.
+            router.push("/dashboard")
             router.refresh()
         } catch (err) {
             setError("An error occurred. Please try again.")
