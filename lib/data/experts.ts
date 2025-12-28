@@ -22,6 +22,37 @@ export interface Expert {
     reviews: Review[]
 }
 
+export const mockExperts: Expert[] = [
+    {
+        id: "1",
+        userId: "u1",
+        name: "Dr. Alice Smith",
+        email: "alice@example.com",
+        expertise: "business",
+        bio: "Experienced business consultant with 10+ years in strategy.",
+        hourlyRate: 150,
+        rating: 4.8,
+        totalSessions: 120,
+        verified: true,
+        imageUrl: "/avatars/alice.jpg",
+        reviews: []
+    },
+    {
+        id: "2",
+        userId: "u2",
+        name: "Bob Jones",
+        email: "bob@example.com",
+        expertise: "tech",
+        bio: "Senior Software Engineer specializing in React and Node.js.",
+        hourlyRate: 100,
+        rating: 4.9,
+        totalSessions: 85,
+        verified: false,
+        imageUrl: "/avatars/bob.jpg",
+        reviews: []
+    }
+]
+
 
 import { cookies } from "next/headers"
 import { API_BASE_URL } from "@/lib/config"
@@ -141,6 +172,61 @@ export async function getExpertsPaginated(page = 1, limit = 10, category?: strin
 }
 
 export async function getExpertById(id: string): Promise<Expert | null> {
-    // In production, fetch from database
-    return null
+    try {
+        const cookieStore = await cookies()
+        const token = cookieStore.get("token")?.value
+
+        const headers: HeadersInit = {}
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`
+        }
+
+        const res = await fetch(`${API_BASE_URL}/expert/get-expert-by-id/${id}`, {
+            method: "GET",
+            headers: headers,
+            cache: 'no-store'
+        })
+
+        if (!res.ok) {
+            console.error("Failed to fetch expert", await res.text())
+            // Fallback to mock data for now during dev if API fails or returns 404
+            const mock = mockExperts.find(e => e.id === id)
+            return mock || null
+        }
+
+        const json = await res.json()
+        if (!json.success) {
+            throw new Error(json.message)
+        }
+
+        const item = json.data
+
+        return {
+            id: item.id?.toString(),
+            userId: item.user_id?.toString() || "",
+            name: item.user?.name || "Unknown Expert",
+            email: item.user?.email || "",
+            expertise: item.expertise,
+            bio: item.bio,
+            hourlyRate: item.hourly_rate,
+            rating: 0,
+            totalSessions: 0,
+            verified: item.is_verified,
+            imageUrl: item.user?.image || "/placeholder-user.jpg",
+            reviews: []
+        }
+
+    } catch (error) {
+        console.error("Error fetching expert:", error)
+        // Fallback
+        const mock = mockExperts.find(e => e.id === id)
+        return mock || null
+    }
+}
+
+export async function getFeaturedExperts(limit = 6): Promise<Expert[]> {
+    const { experts } = await getExpertsPaginated(1, limit)
+    // In a real app we might filter by 'featured' flag or high ratings
+    // For now, just return the first N experts
+    return experts
 }

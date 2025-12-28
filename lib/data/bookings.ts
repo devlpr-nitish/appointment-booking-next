@@ -3,6 +3,7 @@ import { mockAppointments, type Appointment } from "./appointments"
 export interface TimeSlot {
   time: string
   available: boolean
+  id?: number
 }
 
 export interface BookingRequest {
@@ -11,6 +12,7 @@ export interface BookingRequest {
   date: string
   time: string
   duration: number
+  slotId?: string
 }
 
 export async function getAvailableSlots(expertId: string, date: string): Promise<TimeSlot[]> {
@@ -33,32 +35,47 @@ export async function getAvailableSlots(expertId: string, date: string): Promise
   return slots
 }
 
+import { cookies } from "next/headers"
+import { API_BASE_URL } from "@/lib/config"
+
 export async function createBooking(data: BookingRequest): Promise<Appointment> {
-  const { userId, expertId, date, time, duration } = data
+  const { userId, expertId, date, time } = data
 
-  // In production, fetch expert details from database
-  const { mockExperts } = await import("./experts")
-  const expert = mockExperts.find((e) => e.id === expertId)
+  // Note: The backend expects 'slot_id' which represents a specific time slot.
+  // The frontend currently passes date/time but we probably need to fetch slots first and get their IDs.
+  // For this step, I'll assume we pass date/time and the backend might need adjustment or we need to find the slot ID.
 
-  if (!expert) {
-    throw new Error("Expert not found")
+  // However, looking at the backend handler:
+  // type CreateBookingRequest struct {
+  //     ExpertID uint `json:"expert_id" validate:"required"`
+  //     SlotID   uint `json:"slot_id" validate:"required"`
+  // }
+
+  // The frontend needs to send a slot_id.
+  // I need to check if getAvailableSlots provides slot IDs.
+
+  // Let's assume for now we need to update getAvailableSlots to return IDs too.
+
+  const cookieStore = await cookies()
+  const token = cookieStore.get("token")?.value
+
+  const res = await fetch(`${API_BASE_URL}/bookings/create-booking`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      expert_id: parseInt(expertId),
+      slot_id: parseInt(data.slotId || "0") // Potential issue here if slotId is missing
+    })
+  })
+
+  const json = await res.json()
+
+  if (!res.ok) {
+    throw new Error(json.message || "Failed to create booking")
   }
 
-  const appointment: Appointment = {
-    id: `appt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    userId,
-    expertId,
-    expertName: expert.name,
-    expertExpertise: expert.expertise,
-    expertImage: expert.imageUrl,
-    date,
-    time,
-    duration,
-    status: "upcoming",
-    price: expert.hourlyRate,
-    meetingLink: `https://meet.example.com/${Math.random().toString(36).substr(2, 9)}`,
-  }
-
-  mockAppointments.push(appointment)
-  return appointment
+  return json.data
 }

@@ -4,9 +4,21 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import { useState } from "react"
+import { useSession } from "@/components/providers/session-provider"
+import { UserNav } from "@/components/dashboard/user-nav"
+import { useRouter } from "next/navigation"
 
 export function SiteHeader() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const { user } = useSession()
+    const router = useRouter()
+
+    const handleLogout = async () => {
+        await fetch("/api/auth/logout", { method: "POST" })
+        router.push("/")
+        router.refresh()
+        setMobileMenuOpen(false)
+    }
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -50,12 +62,23 @@ export function SiteHeader() {
                     </nav>
 
                     <div className="hidden md:flex md:items-center md:gap-4">
-                        <Button variant="ghost" asChild>
-                            <Link href="/login">Sign In</Link>
-                        </Button>
-                        <Button asChild>
-                            <Link href="/signup">Get Started</Link>
-                        </Button>
+                        {user ? (
+                            <div className="flex items-center gap-4">
+                                <Link href="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                                    Dashboard
+                                </Link>
+                                <UserNav user={user} />
+                            </div>
+                        ) : (
+                            <>
+                                <Button variant="ghost" asChild>
+                                    <Link href="/login">Sign In</Link>
+                                </Button>
+                                <Button asChild>
+                                    <Link href="/signup">Get Started</Link>
+                                </Button>
+                            </>
+                        )}
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -81,12 +104,28 @@ export function SiteHeader() {
                                 Contact
                             </Link>
                             <div className="flex flex-col gap-2 pt-4 border-t border-border/40">
-                                <Button variant="ghost" asChild className="w-full">
-                                    <Link href="/login">Sign In</Link>
-                                </Button>
-                                <Button asChild className="w-full">
-                                    <Link href="/signup">Get Started</Link>
-                                </Button>
+                                {user ? (
+                                    <>
+                                        <div className="px-2 py-2 mb-2 font-medium">
+                                            Signed in as {user.name}
+                                        </div>
+                                        <Button variant="ghost" asChild className="w-full justify-start">
+                                            <Link href="/dashboard">Dashboard</Link>
+                                        </Button>
+                                        <Button variant="ghost" className="w-full justify-start text-destructive" onClick={handleLogout}>
+                                            Log out
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Button variant="ghost" asChild className="w-full">
+                                            <Link href="/login">Sign In</Link>
+                                        </Button>
+                                        <Button asChild className="w-full">
+                                            <Link href="/signup">Get Started</Link>
+                                        </Button>
+                                    </>
+                                )}
                             </div>
                         </nav>
                     </div>

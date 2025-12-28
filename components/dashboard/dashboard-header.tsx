@@ -13,9 +13,9 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
             <div className="container mx-auto px-4">
                 <div className="flex h-16 items-center justify-between">
                     <Link href="/dashboard" className="flex items-center gap-2">
-                        <div className="relative h-8 w-8 overflow-hidden">
+                        {/* <div className="relative h-8 w-8 overflow-hidden">
                             <img src="/logo.png" alt="Nexus Logo" className="h-full w-full object-contain invert dark:invert-0" />
-                        </div>
+                        </div> */}
                         <span className="text-xl font-bold">Nexus</span>
                     </Link>
 

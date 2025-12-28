@@ -9,6 +9,7 @@ import type { Expert } from "@/lib/data/experts"
 import type { TimeSlot } from "@/lib/data/bookings"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { createBookingAction } from "@/app/actions/booking"
 
 interface BookingInterfaceProps {
     expert: Expert
@@ -40,21 +41,17 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
         setError("")
 
         try {
-            const response = await fetch("/api/bookings/create", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    expertId: expert.id,
-                    date: format(date, "yyyy-MM-dd"),
-                    time: selectedTime,
-                    duration: 60,
-                }),
-            })
+            const selectedSlot = slots.find(s => s.time === selectedTime)
+            if (!selectedSlot?.id) {
+                setError("Invalid time slot")
+                setLoading(false)
+                return
+            }
 
-            const data = await response.json()
+            const result = await createBookingAction(parseInt(expert.id), selectedSlot.id)
 
-            if (!response.ok) {
-                setError(data.error || "Booking failed")
+            if (!result.success) {
+                setError(result.message || "Booking failed")
                 return
             }
 
