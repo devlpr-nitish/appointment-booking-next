@@ -1,12 +1,6 @@
 import { mockExperts, type Expert } from "./experts"
-
-export interface ExpertAvailability {
-  id: string
-  expertId: string
-  dayOfWeek: number // 0-6 (Sunday-Saturday)
-  startTime: string
-  endTime: string
-}
+import { cookies } from "next/headers"
+import { API_BASE_URL } from "@/lib/config"
 
 export interface ExpertStats {
   totalEarnings: number
@@ -16,10 +10,59 @@ export interface ExpertStats {
   pendingRequests: number
 }
 
-const mockAvailability: ExpertAvailability[] = []
-
 export async function getExpertProfile(userId: string): Promise<Expert | null> {
-  return mockExperts.find((expert) => expert.userId === userId) || null
+  try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get("token")?.value
+
+    if (!token) {
+      console.error("No authentication token found")
+      return null
+    }
+
+    const res = await fetch(`${API_BASE_URL}/expert/profile`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      cache: "no-store" // Ensure fresh data on each request
+    })
+
+    if (!res.ok) {
+      if (res.status === 404) {
+        // Expert profile not found
+        return null
+      }
+      throw new Error(`Failed to fetch expert profile: ${res.statusText}`)
+    }
+
+    const json = await res.json()
+
+    // The backend returns { expert: {...}, completion_percentage: number }
+    // We need to map the backend Expert model to the frontend Expert type
+    const backendExpert = json.data.expert
+
+    const expert: Expert = {
+      id: backendExpert.id.toString(),
+      userId: backendExpert.user_id.toString(),
+      name: backendExpert.user?.name || "Unknown",
+      email: backendExpert.user?.email || "",
+      expertise: backendExpert.expertise,
+      bio: backendExpert.bio,
+      hourlyRate: backendExpert.hourly_rate,
+      rating: 0, // TODO: Calculate from reviews when implemented
+      totalSessions: 0, // TODO: Get from bookings when implemented
+      verified: backendExpert.is_verified,
+      imageUrl: backendExpert.user?.profile_picture || "/placeholder.svg",
+      reviews: []
+    }
+
+    return expert
+  } catch (error) {
+    console.error("Error fetching expert profile:", error)
+    return null
+  }
 }
 
 export async function updateExpertProfile(
@@ -36,30 +79,8 @@ export async function updateExpertProfile(
   return expert
 }
 
-export async function getExpertAvailability(expertId: string): Promise<ExpertAvailability[]> {
-  return mockAvailability.filter((avail) => avail.expertId === expertId)
-}
-
-export async function addExpertAvailability(
-  expertId: string,
-  data: { dayOfWeek: number; startTime: string; endTime: string },
-): Promise<ExpertAvailability> {
-  const availability: ExpertAvailability = {
-    id: `avail_${Date.now()}_${Math.random()}`,
-    expertId,
-    ...data,
-  }
-
-  mockAvailability.push(availability)
-  return availability
-}
-
-export async function removeExpertAvailability(availabilityId: string): Promise<void> {
-  const index = mockAvailability.findIndex((avail) => avail.id === availabilityId)
-  if (index > -1) {
-    mockAvailability.splice(index, 1)
-  }
-}
+// Availability management has been moved to /lib/data/availability.ts
+// Use the functions from that file for managing expert availability
 
 export async function getExpertStats(expertId: string): Promise<ExpertStats> {
   // In production, calculate from database

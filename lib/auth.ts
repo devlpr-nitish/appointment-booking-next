@@ -24,14 +24,18 @@ export async function getSession(): Promise<User | null> {
         // Decode JWT payload (middle part)
         const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
 
-        // Return user based on token
-        // Note: For now we default to "user" role and placeholder name/email 
-        // as they are not in the token. In a real app, we might fetch profile here.
+        // Check if token is expired
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+            return null
+        }
+
+        // Return user data from token
         return {
-            id: payload.user_id?.toString() || "1",
-            name: "User", // Placeholder
-            email: "user@example.com", // Placeholder
-            role: "user",
+            id: payload.user_id?.toString() || "",
+            name: payload.name || "User",
+            email: payload.email || "",
+            role: payload.role || "user",
+            isExpert: payload.role === "expert",
         }
     } catch (error) {
         return null
