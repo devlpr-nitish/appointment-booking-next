@@ -10,6 +10,7 @@ import type { TimeSlot } from "@/lib/data/bookings"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { createBookingAction } from "@/app/actions/booking"
+import { API_BASE_URL } from "@/lib/config"
 
 interface BookingInterfaceProps {
     expert: Expert
@@ -20,17 +21,35 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
     const [date, setDate] = useState<Date | undefined>(new Date())
     const [selectedTime, setSelectedTime] = useState<string | null>(null)
     const [slots, setSlots] = useState<TimeSlot[]>([])
+    const [loadingSlots, setLoadingSlots] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
 
     useEffect(() => {
         if (date) {
-            // Fetch available slots
+            const controller = new AbortController()
+            setLoadingSlots(true)
+            setError("")
+            setSelectedTime(null) // Clear selected time when date changes
+
             const dateStr = format(date, "yyyy-MM-dd")
-            fetch(`/api/bookings/slots?expertId=${expert.id}&date=${dateStr}`)
-                .then((res) => res.json())
-                .then((data: { slots: TimeSlot[] }) => setSlots(data.slots || []))
-                .catch(() => setError("Failed to load available slots"))
+            fetch(`${API_BASE_URL}/expert/available-slots?expertId=${expert.id}&date=${dateStr}`, {
+                signal: controller.signal
+            })
+                .then((res) => res.json() as Promise<{ data: { slots: TimeSlot[] } }>)
+                .then((data) => {
+                    setSlots(data.data?.slots || [])
+                    setLoadingSlots(false)
+                })
+                .catch((err) => {
+                    if (err.name !== 'AbortError') {
+                        setError("Failed to load available slots")
+                        setSlots([])
+                        setLoadingSlots(false)
+                    }
+                })
+
+            return () => controller.abort()
         }
     }, [date, expert.id])
 
@@ -84,21 +103,34 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
                     <div className="flex flex-col md:flex-row gap-8">
                         <div className="flex-shrink-0">
                             <h3 className="text-sm font-medium mb-3">Select a Date</h3>
-                            <Calendar
-                                mode="single"
-                                selected={date}
-                                onSelect={setDate}
-                                disabled={(date) => date < new Date() || date < new Date(new Date().setHours(0, 0, 0, 0))}
-                                className="rounded-md border"
-                            />
+                            <div className="inline-block bg-background rounded-lg border shadow-sm">
+                                <Calendar
+                                    mode="single"
+                                    date={date}
+                                    onSelect={setDate}
+                                    disabled={(date) => date < new Date() || date < new Date(new Date().setHours(0, 0, 0, 0))}
+                                    className="rounded-lg"
+                                />
+                            </div>
                         </div>
 
-                        {date && (
-                            <div className="flex-1">
-                                <h3 className="text-sm font-medium mb-3">Select a Time</h3>
-                                <TimeSlotPicker slots={slots} selectedTime={selectedTime} onSelectTime={setSelectedTime} />
-                            </div>
-                        )}
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-medium mb-3">
+                                {date ? `Available Times for ${format(date, "MMM d, yyyy")}` : "Select a Date First"}
+                            </h3>
+                            {date ? (
+                                <TimeSlotPicker
+                                    slots={slots}
+                                    selectedTime={selectedTime}
+                                    onSelectTime={setSelectedTime}
+                                    isLoading={loadingSlots}
+                                />
+                            ) : (
+                                <div className="p-8 text-center text-muted-foreground border rounded-lg bg-muted/30">
+                                    Please select a date to view available time slots
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </CardContent>
             </Card>
