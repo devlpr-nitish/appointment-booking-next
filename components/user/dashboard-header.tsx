@@ -1,6 +1,6 @@
 
 import Link from "next/link"
-import { UserNav } from "@/components/dashboard/user-nav"
+import { UserNav } from "@/components/user/user-nav"
 import type { User } from "@/lib/auth"
 
 interface DashboardHeaderProps {
@@ -12,7 +12,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container mx-auto px-4">
                 <div className="flex h-16 items-center justify-between">
-                    <Link href="/dashboard" className="flex items-center gap-2">
+                    <Link href="/user" className="flex items-center gap-2">
                         {/* <div className="relative h-8 w-8 overflow-hidden">
                             <img src="/logo.png" alt="Nexus Logo" className="h-full w-full object-contain invert dark:invert-0" />
                         </div> */}
@@ -21,13 +21,13 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
 
                     <nav className="flex items-center gap-6">
                         <Link
-                            href="/dashboard"
+                            href="/user"
                             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                         >
                             Overview
                         </Link>
                         <Link
-                            href="/dashboard/appointments"
+                            href="/user/appointments"
                             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                         >
                             My Bookings

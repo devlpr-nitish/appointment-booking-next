@@ -6,20 +6,24 @@ export interface AvailabilitySlot {
     day_of_week: number // 0-6 (Sunday-Saturday)
     start_time: string // Format: "HH:MM"
     end_time: string // Format: "HH:MM"
+    is_recurring: boolean
+    date?: string // Format: "YYYY-MM-DD"
     created_at: string
     updated_at: string
 }
 
 export interface CreateAvailabilityData {
-    day_of_week: number
     start_time: string
     end_time: string
+    is_recurring: boolean
+    date: string
 }
 
 export interface UpdateAvailabilityData {
-    day_of_week: number
     start_time: string
     end_time: string
+    is_recurring: boolean
+    date: string
 }
 
 /**

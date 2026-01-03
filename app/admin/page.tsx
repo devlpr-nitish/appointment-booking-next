@@ -1,6 +1,6 @@
 import { requireRole } from "@/lib/auth"
 import { AdminHeader } from "@/components/admin/admin-header"
-import { StatsCard } from "@/components/dashboard/stats-card"
+import { StatsCard } from "@/components/user/stats-card"
 import { Users, UserCheck, Calendar, DollarSign, TrendingUp, AlertCircle } from "lucide-react"
 import { getPlatformStats } from "@/lib/data/admin"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

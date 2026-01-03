@@ -67,8 +67,17 @@ export async function requireAuth(): Promise<User> {
 
 export async function requireRole(role: "admin" | "expert" | "user"): Promise<User> {
     const session = await getSession()
-    if (!session || session.role !== role) {
+    if (!session) {
         redirect("/login")
+    }
+
+    // Admin has access to everything
+    if (session.role === "admin") {
+        return session
+    }
+
+    if (session.role !== role) {
+        redirect(role === "expert" ? "/expert" : (role === "admin" ? "/admin" : "/user"))
     }
     return session
 }

@@ -1,7 +1,7 @@
 import { requireAuth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { ExpertDashboardHeader } from "@/components/expert/expert-dashboard-header"
-import { StatsCard } from "@/components/dashboard/stats-card"
+import { StatsCard } from "@/components/user/stats-card"
 import { Calendar, DollarSign, Star, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getExpertProfile, getExpertStats } from "@/lib/data/expert-profile"
@@ -100,11 +100,6 @@ async function ExpertDashboardContent({ userId }: { userId: string }) {
 
 export default async function ExpertDashboardPage() {
   const user = await requireAuth()
-
-  // Redirect non-experts
-  if (user.role !== "expert" && !user.isExpert) {
-    redirect("/dashboard")
-  }
 
   return (
     <div className="min-h-screen bg-background">

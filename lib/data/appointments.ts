@@ -9,7 +9,7 @@ export interface Appointment {
   date: string
   time: string
   duration: number
-  status: "upcoming" | "completed" | "cancelled"
+  status: "pending" | "confirmed" | "cancelled" | "completed"
   price: number
   meetingLink?: string
 }
@@ -25,7 +25,7 @@ export const mockAppointments: Appointment[] = [
     date: "2025-01-15",
     time: "14:00",
     duration: 60,
-    status: "upcoming",
+    status: "confirmed",
     price: 150,
     meetingLink: "https://meet.example.com/abc123",
   },
@@ -39,7 +39,7 @@ export const mockAppointments: Appointment[] = [
     date: "2025-01-20",
     time: "10:00",
     duration: 60,
-    status: "upcoming",
+    status: "confirmed",
     price: 120,
     meetingLink: "https://meet.example.com/def456",
   },

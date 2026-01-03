@@ -12,7 +12,7 @@ export default async function SignupPage() {
         } else if (user.role === "expert" || user.isExpert) {
             redirect("/expert")
         } else {
-            redirect("/dashboard")
+            redirect("/user")
         }
     }
 

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { StatsCardSkeleton } from "@/components/dashboard/stats-card-skeleton"
+import { StatsCardSkeleton } from "@/components/user/stats-card-skeleton"
 
 export function ExpertDashboardLoading() {
     return (

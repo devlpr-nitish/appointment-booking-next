@@ -72,9 +72,18 @@ export function AvailabilityList({ slots, onEdit, onDelete, isLoading }: Availab
                                                 <p className="font-medium">
                                                     {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                                                 </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {calculateDuration(slot.start_time, slot.end_time)}
-                                                </p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {calculateDuration(slot.start_time, slot.end_time)}
+                                                    </p>
+                                                    {slot.is_recurring ? (
+                                                        <Badge variant="outline" className="text-[10px] py-0 h-4">Recurring</Badge>
+                                                    ) : (
+                                                        <Badge variant="secondary" className="text-[10px] py-0 h-4">
+                                                            {slot.date ? new Date(slot.date).toLocaleDateString() : "Specific Date"}
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="flex gap-2">

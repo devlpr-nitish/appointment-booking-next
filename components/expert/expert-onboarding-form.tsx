@@ -62,7 +62,7 @@ export function ExpertOnboardingForm() {
         return
       }
 
-      router.push("/dashboard")
+      router.push("/user")
       router.refresh()
     } catch (err) {
       setError("An error occurred. Please try again.")

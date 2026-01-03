@@ -1,9 +1,9 @@
 import { Card } from "@/components/ui/card"
 import { requireAuth } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { StatsCard } from "@/components/dashboard/stats-card"
-import { AppointmentCard } from "@/components/dashboard/appointment-card"
+import { DashboardHeader } from "@/components/user/dashboard-header"
+import { StatsCard } from "@/components/user/stats-card"
+import { AppointmentCard } from "@/components/user/appointment-card"
 import { Button } from "@/components/ui/button"
 import { Calendar, DollarSign, TrendingUp, Clock } from "lucide-react"
 import Link from "next/link"
@@ -12,22 +12,12 @@ import { getUserBookingsAction } from "@/app/actions/user"
 export default async function DashboardPage() {
     const user = await requireAuth()
 
-    // Redirect experts to their dashboard
-    if (user.role === "expert" || user.isExpert) {
-        redirect("/expert")
-    }
-
-    // Redirect admins to admin dashboard
-    if (user.role === "admin") {
-        redirect("/admin")
-    }
-
     const { data: bookings = [] } = await getUserBookingsAction()
 
     // Process bookings
     // Backend doesn't sort by status group, so we do it here
     const upcomingAppointments = bookings.filter((b: any) =>
-        b.status === "confirmed" || b.status === "pending" || b.status === "upcoming"
+        b.status === "confirmed" || b.status === "pending"
     )
 
     const pastAppointments = bookings.filter((b: any) =>

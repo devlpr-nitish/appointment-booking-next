@@ -1,6 +1,6 @@
 import { requireAuth } from "@/lib/auth"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { AppointmentCard } from "@/components/dashboard/appointment-card"
+import { DashboardHeader } from "@/components/user/dashboard-header"
+import { AppointmentCard } from "@/components/user/appointment-card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getUserBookingsAction } from "@/app/actions/user"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ export default async function AppointmentsPage() {
   const { data: bookings = [] } = await getUserBookingsAction()
 
   const upcomingAppointments = bookings.filter((b: any) =>
-    b.status === "confirmed" || b.status === "pending" || b.status === "upcoming"
+    b.status === "confirmed" || b.status === "pending"
   )
 
   const pastAppointments = bookings.filter((b: any) =>

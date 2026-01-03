@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import { useState } from "react"
 import { useSession } from "@/components/providers/session-provider"
-import { UserNav } from "@/components/dashboard/user-nav"
+import { UserNav } from "@/components/user/user-nav"
 import { useRouter } from "next/navigation"
 import { logoutAction } from "@/app/actions/auth"
 
@@ -65,7 +65,7 @@ export function SiteHeader() {
                     <div className="hidden md:flex md:items-center md:gap-4">
                         {user ? (
                             <div className="flex items-center gap-4">
-                                <Link href="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                                <Link href="/user" className="text-sm font-medium text-muted-foreground hover:text-foreground">
                                     Dashboard
                                 </Link>
                                 <UserNav user={user} />
@@ -111,7 +111,7 @@ export function SiteHeader() {
                                             Signed in as {user.name}
                                         </div>
                                         <Button variant="ghost" asChild className="w-full justify-start">
-                                            <Link href="/dashboard">Dashboard</Link>
+                                            <Link href="/user">Dashboard</Link>
                                         </Button>
                                         <Button variant="ghost" className="w-full justify-start text-destructive" onClick={handleLogout}>
                                             Log out

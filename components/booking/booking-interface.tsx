@@ -70,7 +70,7 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
             }
 
             // Redirect to dashboard or success page
-            router.push("/dashboard")
+            router.push("/user")
             router.refresh()
         } catch (err) {
             setError("An error occurred. Please try again.")

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { UserNav } from "@/components/dashboard/user-nav"
+import { UserNav } from "@/components/user/user-nav"
 import type { User } from "@/lib/auth"
 
 interface AdminHeaderProps {
