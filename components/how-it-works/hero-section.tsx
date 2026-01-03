@@ -12,7 +12,7 @@ export function HeroSection() {
                         How Nexus Works
                     </h1>
                     <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                        Your journey to expert guidance in 5 simple steps. Whether you're seeking advice or sharing knowledge, we make it seamless.
+                        Your journey to expert guidance in 5 simple steps. Whether you&apos;re seeking advice or sharing knowledge, we make it seamless.
                     </p>
                 </div>
             </div>

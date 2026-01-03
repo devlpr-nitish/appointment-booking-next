@@ -68,7 +68,7 @@ export function AuthSideContent() {
                                 <div>
                                     <h3 className="font-semibold text-white">Curated Expert Network</h3>
                                     <p className="text-sm text-muted-foreground">
-                                        Connect with verified experts who have "been there, done that" at top companies.
+                                        Connect with verified experts who have &quot;been there, done that&quot; at top companies.
                                     </p>
                                 </div>
                             </div>
@@ -86,7 +86,7 @@ export function AuthSideContent() {
                                 <div>
                                     <h3 className="font-semibold text-white">Satisfaction Guaranteed</h3>
                                     <p className="text-sm text-muted-foreground">
-                                        We ensure high-quality sessions. If you're not satisfied, we'll make it right.
+                                        We ensure high-quality sessions. If you&apos;re not satisfied, we&apos;ll make it right.
                                     </p>
                                 </div>
                             </div>

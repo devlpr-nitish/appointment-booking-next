@@ -16,7 +16,7 @@ export function AboutHero() {
                         Empowering Connections Through <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Expertise</span>
                     </h1>
                     <p className="mb-10 text-xl text-muted-foreground leading-relaxed">
-                        We're building the bridge between knowledge seekers and industry leaders.
+                        We&apos;re building the bridge between knowledge seekers and industry leaders.
                         Our mission is to democratize access to world-class mentorship and professional guidance.
                     </p>
                 </div>

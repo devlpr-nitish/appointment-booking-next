@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Edit, Trash2, Clock } from "lucide-react"
@@ -39,7 +39,7 @@ export function AvailabilityList({ slots, onEdit, onDelete, isLoading }: Availab
                     <Clock className="h-12 w-12 text-muted-foreground mb-4" />
                     <h3 className="text-lg font-semibold mb-2">No Availability Set</h3>
                     <p className="text-sm text-muted-foreground text-center max-w-md">
-                        You haven't set any availability yet. Add your available hours to let clients know when they can book
+                        You haven&apos;t set any availability yet. Add your available hours to let clients know when they can book
                         sessions with you.
                     </p>
                 </CardContent>

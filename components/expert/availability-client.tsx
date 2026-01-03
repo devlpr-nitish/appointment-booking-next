@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus, Calendar } from "lucide-react"
 import { AvailabilityList } from "@/components/expert/availability-list"
@@ -33,12 +33,7 @@ export function AvailabilityClient() {
     const [deleteId, setDeleteId] = useState<number | null>(null)
     const { toast } = useToast()
 
-    // Load availability slots
-    useEffect(() => {
-        loadAvailability()
-    }, [])
-
-    const loadAvailability = async () => {
+    const loadAvailability = useCallback(async () => {
         try {
             setIsLoading(true)
             const result = await getAvailabilityAction()
@@ -51,7 +46,7 @@ export function AvailabilityClient() {
                     variant: "destructive",
                 })
             }
-        } catch (error) {
+        } catch {
             toast({
                 title: "Error",
                 description: "Failed to load availability. Please try again.",
@@ -60,7 +55,12 @@ export function AvailabilityClient() {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [toast])
+
+    // Load availability slots
+    useEffect(() => {
+        loadAvailability()
+    }, [loadAvailability])
 
     const handleCreate = async (data: CreateAvailabilityData) => {
         try {

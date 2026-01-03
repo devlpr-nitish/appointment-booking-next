@@ -49,7 +49,7 @@ export default async function AdminBookingsPage() {
                                             <td className="py-3 px-4">
                                                 <Badge
                                                     variant={
-                                                        booking.status === "upcoming"
+                                                        booking.status === "pending"
                                                             ? "default"
                                                             : booking.status === "completed"
                                                                 ? "secondary"
