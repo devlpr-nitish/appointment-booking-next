@@ -26,16 +26,19 @@ export async function loginAction(email: string, password: string) {
             path: "/",
             maxAge: 86400,
             sameSite: "strict",
-            // httpOnly: true, // Ideally true, but frontend might need to read it? 
-            // In original code it was document.cookie, implying JS access.
-            // But if we move all to Server Actions, we can make it HttpOnly.
-            // Let's stick to HttpOnly for security unless we find explicit JS reads.
-            // "getAvailableSlotsAction" reads it from cookieStore (server side).
-            // So HttpOnly is fine for Server Actions.
             httpOnly: true
         })
 
-        return { success: true, data: data.data }
+        // Decode token to get role
+        let role = "user"
+        try {
+            const payload = JSON.parse(Buffer.from(data.data.token.split('.')[1], 'base64').toString())
+            role = payload.role || "user"
+        } catch (e) {
+            console.error("Failed to decode token", e)
+        }
+
+        return { success: true, data: { ...data.data, role } }
 
     } catch (error) {
         return { success: false, message: "An error occurred during login." }

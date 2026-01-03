@@ -31,8 +31,15 @@ export function LoginForm() {
                 return
             }
 
-            // Redirect based on role (defaulting to dashboard since role is not in response yet)
-            router.push("/dashboard")
+            // Redirect based on role
+            const role = result.data.role
+            if (role === "admin") {
+                router.push("/admin")
+            } else if (role === "expert") {
+                router.push("/expert")
+            } else {
+                router.push("/user")
+            }
             router.refresh()
         } catch (err) {
             setError("An error occurred. Please try again.")
