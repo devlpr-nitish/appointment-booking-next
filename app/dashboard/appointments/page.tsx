@@ -2,14 +2,21 @@ import { requireAuth } from "@/lib/auth"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { AppointmentCard } from "@/components/dashboard/appointment-card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getUpcomingAppointments, getPastAppointments } from "@/lib/data/appointments"
+import { getUserBookingsAction } from "@/app/actions/user"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
 export default async function AppointmentsPage() {
   const user = await requireAuth()
-  const upcomingAppointments = await getUpcomingAppointments(user.id)
-  const pastAppointments = await getPastAppointments(user.id)
+  const { data: bookings = [] } = await getUserBookingsAction()
+
+  const upcomingAppointments = bookings.filter((b: any) =>
+    b.status === "confirmed" || b.status === "pending" || b.status === "upcoming"
+  )
+
+  const pastAppointments = bookings.filter((b: any) =>
+    b.status === "completed" || b.status === "cancelled"
+  )
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,8 +42,17 @@ export default async function AppointmentsPage() {
           <TabsContent value="upcoming" className="mt-6">
             {upcomingAppointments.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2">
-                {upcomingAppointments.map((appointment) => (
-                  <AppointmentCard key={appointment.id} appointment={appointment} />
+                {upcomingAppointments.map((appointment: any) => (
+                  <AppointmentCard key={appointment.id} appointment={{
+                    ...appointment,
+                    expertName: appointment.expert?.user?.name || "Expert",
+                    expertImage: appointment.expert?.user?.image || "/placeholder-user.jpg",
+                    expertExpertise: appointment.expert?.specializations?.[0] || "General",
+                    date: appointment.booking_date,
+                    time: appointment.start_time,
+                    price: appointment.total_price || 0,
+                    duration: 60
+                  }} />
                 ))}
               </div>
             ) : (
@@ -52,8 +68,17 @@ export default async function AppointmentsPage() {
           <TabsContent value="past" className="mt-6">
             {pastAppointments.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2">
-                {pastAppointments.map((appointment) => (
-                  <AppointmentCard key={appointment.id} appointment={appointment} />
+                {pastAppointments.map((appointment: any) => (
+                  <AppointmentCard key={appointment.id} appointment={{
+                    ...appointment,
+                    expertName: appointment.expert?.user?.name || "Expert",
+                    expertImage: appointment.expert?.user?.image || "/placeholder-user.jpg",
+                    expertExpertise: appointment.expert?.specializations?.[0] || "General",
+                    date: appointment.booking_date,
+                    time: appointment.start_time,
+                    price: appointment.total_price || 0,
+                    duration: 60
+                  }} />
                 ))}
               </div>
             ) : (

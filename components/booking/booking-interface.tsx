@@ -6,11 +6,10 @@ import { Calendar } from "@/components/ui/calendar"
 import { TimeSlotPicker } from "./time-slot-picker"
 import { format } from "date-fns"
 import type { Expert } from "@/lib/data/experts"
-import type { TimeSlot } from "@/lib/data/bookings"
+import type { TimeRange } from "@/lib/data/bookings"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { createBookingAction } from "@/app/actions/booking"
-import { API_BASE_URL } from "@/lib/config"
+import { createBookingAction, getAvailableSlotsAction } from "@/app/actions/booking"
 
 interface BookingInterfaceProps {
     expert: Expert
@@ -19,8 +18,9 @@ interface BookingInterfaceProps {
 export function BookingInterface({ expert }: BookingInterfaceProps) {
     const router = useRouter()
     const [date, setDate] = useState<Date | undefined>(new Date())
-    const [selectedTime, setSelectedTime] = useState<string | null>(null)
-    const [slots, setSlots] = useState<TimeSlot[]>([])
+    const [startTime, setStartTime] = useState<string>("")
+    const [endTime, setEndTime] = useState<string>("")
+    const [availableRanges, setAvailableRanges] = useState<TimeRange[]>([])
     const [loadingSlots, setLoadingSlots] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
@@ -30,23 +30,24 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
             const controller = new AbortController()
             setLoadingSlots(true)
             setError("")
-            setSelectedTime(null) // Clear selected time when date changes
+            setStartTime("")
+            setEndTime("")
 
             const dateStr = format(date, "yyyy-MM-dd")
-            fetch(`${API_BASE_URL}/expert/available-slots?expertId=${expert.id}&date=${dateStr}`, {
-                signal: controller.signal
-            })
-                .then((res) => res.json() as Promise<{ data: { slots: TimeSlot[] } }>)
-                .then((data) => {
-                    setSlots(data.data?.slots || [])
+            getAvailableSlotsAction(parseInt(expert.id), dateStr)
+                .then((result) => {
+                    if (result.success) {
+                        setAvailableRanges(result.data.slots || [])
+                    } else {
+                        setError(result.message)
+                        setAvailableRanges([])
+                    }
                     setLoadingSlots(false)
                 })
-                .catch((err) => {
-                    if (err.name !== 'AbortError') {
-                        setError("Failed to load available slots")
-                        setSlots([])
-                        setLoadingSlots(false)
-                    }
+                .catch(() => {
+                    setError("Failed to load available slots")
+                    setAvailableRanges([])
+                    setLoadingSlots(false)
                 })
 
             return () => controller.abort()
@@ -54,20 +55,14 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
     }, [date, expert.id])
 
     const handleBook = async () => {
-        if (!date || !selectedTime) return
+        if (!date || !startTime || !endTime) return
 
         setLoading(true)
         setError("")
 
         try {
-            const selectedSlot = slots.find(s => s.time === selectedTime)
-            if (!selectedSlot?.id) {
-                setError("Invalid time slot")
-                setLoading(false)
-                return
-            }
-
-            const result = await createBookingAction(parseInt(expert.id), selectedSlot.id)
+            const dateStr = format(date, "yyyy-MM-dd")
+            const result = await createBookingAction(parseInt(expert.id), dateStr, startTime, endTime)
 
             if (!result.success) {
                 setError(result.message || "Booking failed")
@@ -120,9 +115,13 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
                             </h3>
                             {date ? (
                                 <TimeSlotPicker
-                                    slots={slots}
-                                    selectedTime={selectedTime}
-                                    onSelectTime={setSelectedTime}
+                                    availableRanges={availableRanges}
+                                    startTime={startTime}
+                                    endTime={endTime}
+                                    onTimeChange={(start, end) => {
+                                        setStartTime(start)
+                                        setEndTime(end)
+                                    }}
                                     isLoading={loadingSlots}
                                 />
                             ) : (
@@ -135,7 +134,7 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
                 </CardContent>
             </Card>
 
-            {date && selectedTime && (
+            {date && startTime && endTime && (
                 <Card>
                     <CardHeader>
                         <CardTitle>Booking Summary</CardTitle>
@@ -153,15 +152,17 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Time</span>
-                                    <span className="font-medium">{selectedTime}</span>
+                                    <span className="font-medium">{startTime} - {endTime}</span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Duration</span>
-                                    <span className="font-medium">60 minutes</span>
-                                </div>
+
                                 <div className="border-t my-2 pt-2 flex justify-between font-bold">
                                     <span>Total</span>
-                                    <span>${expert.hourlyRate}</span>
+                                    <span>${(() => {
+                                        const start = parseInt(startTime.split(':')[0]) + parseInt(startTime.split(':')[1]) / 60
+                                        const end = parseInt(endTime.split(':')[0]) + parseInt(endTime.split(':')[1]) / 60
+                                        const duration = end - start
+                                        return (duration * expert.hourlyRate).toFixed(2)
+                                    })()}</span>
                                 </div>
                             </div>
                         </div>
@@ -170,13 +171,13 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
                             size="lg"
                             className="w-full"
                             onClick={handleBook}
-                            disabled={!date || !selectedTime || loading}
+                            disabled={!date || !startTime || !endTime || loading}
                         >
-                            {loading ? "Confirming..." : "Confirm Booking"}
+                            {loading ? "Requesting..." : "Request Booking"}
                         </Button>
                     </CardContent>
                 </Card>
             )}
-        </div>
+        </div >
     )
 }

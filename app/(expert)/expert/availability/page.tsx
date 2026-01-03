@@ -19,16 +19,12 @@ export default async function AvailabilityPage() {
         redirect("/become-expert")
     }
 
-    // Get token for client component
-    const cookieStore = await cookies()
-    const token = cookieStore.get("token")?.value || ""
-
     return (
         <div className="min-h-screen bg-background">
             <ExpertDashboardHeader user={user} />
 
             <main className="container mx-auto px-4 py-8 max-w-4xl">
-                <AvailabilityClient token={token} />
+                <AvailabilityClient />
             </main>
         </div>
     )

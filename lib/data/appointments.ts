@@ -58,33 +58,4 @@ export const mockAppointments: Appointment[] = [
   },
 ]
 
-export async function getUserAppointments(userId: string): Promise<Appointment[]> {
-  // In production, fetch from database
-  return mockAppointments.filter((appt) => appt.userId === userId)
-}
 
-export async function getUpcomingAppointments(userId: string): Promise<Appointment[]> {
-  const appointments = await getUserAppointments(userId)
-  return appointments
-    .filter((appt) => appt.status === "upcoming")
-    .sort((a, b) => {
-      return new Date(a.date).getTime() - new Date(b.date).getTime()
-    })
-}
-
-export async function getPastAppointments(userId: string): Promise<Appointment[]> {
-  const appointments = await getUserAppointments(userId)
-  return appointments
-    .filter((appt) => appt.status === "completed")
-    .sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime()
-    })
-}
-
-export async function cancelAppointment(appointmentId: string): Promise<void> {
-  // In production, update database
-  const appointment = mockAppointments.find((appt) => appt.id === appointmentId)
-  if (appointment) {
-    appointment.status = "cancelled"
-  }
-}

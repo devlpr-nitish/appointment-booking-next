@@ -6,8 +6,8 @@ import { StatsCard } from "@/components/dashboard/stats-card"
 import { AppointmentCard } from "@/components/dashboard/appointment-card"
 import { Button } from "@/components/ui/button"
 import { Calendar, DollarSign, TrendingUp, Clock } from "lucide-react"
-import { getUpcomingAppointments, getPastAppointments } from "@/lib/data/appointments"
 import Link from "next/link"
+import { getUserBookingsAction } from "@/app/actions/user"
 
 export default async function DashboardPage() {
     const user = await requireAuth()
@@ -22,10 +22,22 @@ export default async function DashboardPage() {
         redirect("/admin")
     }
 
-    const upcomingAppointments = await getUpcomingAppointments(user.id)
-    const pastAppointments = await getPastAppointments(user.id)
+    const { data: bookings = [] } = await getUserBookingsAction()
 
-    const totalSpent = [...upcomingAppointments, ...pastAppointments].reduce((sum, appt) => sum + (appt.price || 0), 0)
+    // Process bookings
+    // Backend doesn't sort by status group, so we do it here
+    const upcomingAppointments = bookings.filter((b: any) =>
+        b.status === "confirmed" || b.status === "pending" || b.status === "upcoming"
+    )
+
+    const pastAppointments = bookings.filter((b: any) =>
+        b.status === "completed" || b.status === "cancelled"
+    )
+
+    // Calculate total spent only on confirmed/completed bookings
+    const totalSpent = bookings
+        .filter((b: any) => b.status === "confirmed" || b.status === "completed")
+        .reduce((sum: number, appt: any) => sum + (appt.total_price || appt.price || 0), 0)
 
     return (
         <div className="min-h-screen bg-background">
@@ -47,20 +59,20 @@ export default async function DashboardPage() {
                     />
                     <StatsCard
                         title="Completed Sessions"
-                        value={pastAppointments.length}
+                        value={pastAppointments.filter((b: any) => b.status === "completed").length}
                         description="Total sessions attended"
                         icon={Clock}
                     />
                     <StatsCard
                         title="Total Spent"
-                        value={`$${totalSpent}`}
+                        value={`$${totalSpent.toFixed(2)}`}
                         description="Investment in learning"
                         icon={DollarSign}
                     />
                     <StatsCard
-                        title="This Month"
-                        value={upcomingAppointments.length}
-                        description="Sessions this month"
+                        title="Active Bookings"
+                        value={bookings.length}
+                        description="All time bookings"
                         icon={TrendingUp}
                     />
                 </div>
@@ -76,8 +88,17 @@ export default async function DashboardPage() {
 
                     {upcomingAppointments.length > 0 ? (
                         <div className="grid gap-4 md:grid-cols-2">
-                            {upcomingAppointments.map((appointment) => (
-                                <AppointmentCard key={appointment.id} appointment={appointment} />
+                            {upcomingAppointments.map((appointment: any) => (
+                                <AppointmentCard key={appointment.id} appointment={{
+                                    ...appointment,
+                                    expertName: appointment.expert?.user?.name || "Expert",
+                                    expertImage: appointment.expert?.user?.image || "/placeholder-user.jpg",
+                                    expertExpertise: appointment.expert?.specializations?.[0] || "General",
+                                    date: appointment.booking_date,
+                                    time: appointment.start_time,
+                                    price: appointment.total_price || 0,
+                                    duration: 60 // Should calculate from start/end
+                                }} />
                             ))}
                         </div>
                     ) : (
@@ -95,17 +116,19 @@ export default async function DashboardPage() {
                     <div>
                         <h2 className="text-2xl font-bold mb-4">Past Sessions</h2>
                         <div className="grid gap-4 md:grid-cols-2">
-                            {pastAppointments.slice(0, 4).map((appointment) => (
-                                <AppointmentCard key={appointment.id} appointment={appointment} />
+                            {pastAppointments.slice(0, 4).map((appointment: any) => (
+                                <AppointmentCard key={appointment.id} appointment={{
+                                    ...appointment,
+                                    expertName: appointment.expert?.user?.name || "Expert",
+                                    expertImage: appointment.expert?.user?.image || "/placeholder-user.jpg",
+                                    expertExpertise: appointment.expert?.specializations?.[0] || "General",
+                                    date: appointment.booking_date,
+                                    time: appointment.start_time,
+                                    price: appointment.total_price || 0,
+                                    duration: 60
+                                }} />
                             ))}
                         </div>
-                        {pastAppointments.length > 4 && (
-                            <div className="mt-4 text-center">
-                                <Button variant="outline" asChild>
-                                    <Link href="/dashboard/appointments">View All Sessions</Link>
-                                </Button>
-                            </div>
-                        )}
                     </div>
                 )}
             </main>

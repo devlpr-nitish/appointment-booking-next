@@ -7,6 +7,7 @@ import { useState } from "react"
 import { useSession } from "@/components/providers/session-provider"
 import { UserNav } from "@/components/dashboard/user-nav"
 import { useRouter } from "next/navigation"
+import { logoutAction } from "@/app/actions/auth"
 
 export function SiteHeader() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -14,7 +15,7 @@ export function SiteHeader() {
     const router = useRouter()
 
     const handleLogout = async () => {
-        await fetch("/api/auth/logout", { method: "POST" })
+        await logoutAction()
         router.push("/")
         router.refresh()
         setMobileMenuOpen(false)

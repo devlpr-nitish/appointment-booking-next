@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { API_BASE_URL } from "@/lib/config"
+import { getExpertProfileAction, updateExpertProfileAction } from "@/app/actions/expert"
 import { Loader2, Save, Edit2, CheckCircle2, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -54,36 +54,24 @@ export function ExpertProfileView({ userId }: ExpertProfileViewProps) {
             setLoading(true)
             setError("")
 
-            const token = document.cookie
-                .split("; ")
-                .find((row) => row.startsWith("token="))
-                ?.split("=")[1]
+            const result = await getExpertProfileAction()
 
-            if (!token) {
-                router.push("/login")
+            if (!result.success) {
+                if (result.message === "Unauthorized" || result.message === "No token found") {
+                    router.push("/login")
+                    return
+                }
+                setError(result.message || "Failed to load profile")
                 return
             }
 
-            const response = await fetch(`${API_BASE_URL}/expert/profile`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-
-            const data = await response.json()
-
-            if (!data.success) {
-                setError(data.message || "Failed to load profile")
-                return
-            }
-
-            setProfile(data.data.expert)
-            setCompletionPercentage(data.data.completion_percentage || 0)
+            setProfile(result.data.expert)
+            setCompletionPercentage(result.data.completion_percentage || 0)
 
             // Set form values
-            setBio(data.data.expert.bio || "")
-            setExpertise(data.data.expert.expertise || "")
-            setHourlyRate(data.data.expert.hourly_rate?.toString() || "")
+            setBio(result.data.expert.bio || "")
+            setExpertise(result.data.expert.expertise || "")
+            setHourlyRate(result.data.expert.hourlyRate?.toString() || "")
         } catch (err) {
             setError("An error occurred while loading your profile")
         } finally {
@@ -97,37 +85,14 @@ export function ExpertProfileView({ userId }: ExpertProfileViewProps) {
             setError("")
             setSuccess("")
 
-            const token = document.cookie
-                .split("; ")
-                .find((row) => row.startsWith("token="))
-                ?.split("=")[1]
-
-            if (!token) {
-                router.push("/login")
-                return
-            }
-
-            const response = await fetch(`${API_BASE_URL}/expert/profile`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    bio,
-                    expertise,
-                    hourly_rate: parseFloat(hourlyRate) || 0,
-                }),
+            const result = await updateExpertProfileAction({
+                bio,
+                expertise,
+                hourlyRate: parseFloat(hourlyRate) || 0,
             })
 
-            console.log("Response status:", response.status)
-            console.log("Response headers:", response.headers)
-
-            const data = await response.json()
-            console.log("Response data:", data)
-
-            if (!data.success) {
-                setError(data.error?.details || data.message || "Failed to update profile")
+            if (!result.success) {
+                setError(result.message || "Failed to update profile")
                 return
             }
 

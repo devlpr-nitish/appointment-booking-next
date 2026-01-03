@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { applyExpertAction } from "@/app/actions/expert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -50,16 +51,14 @@ export function ExpertOnboardingForm() {
     setLoading(true)
 
     try {
-      const response = await fetch("/api/expert/apply", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ expertise, bio, hourlyRate: rate }),
+      const result = await applyExpertAction({
+        bio: bio,
+        hourlyRate: rate,
+        expertise: [expertise]
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.error || "Application failed")
+      if (!result.success) {
+        setError(result.message || "Application failed")
         return
       }
 

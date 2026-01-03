@@ -1,11 +1,26 @@
 
+export interface Expert {
+    id: string
+    userId: string
+    name: string
+    email: string
+    expertise: string
+    bio: string
+    hourlyRate: number
+    rating: number
+    totalSessions: number
+    verified: boolean
+    imageUrl: string
+    reviews: any[]
+}
+
 export interface User {
     id: string
     name: string
     email: string
     role: "admin" | "expert" | "user"
     isExpert?: boolean
-    image?: string // Added as UserNav might use it properly (UserNav uses initials from name, but Avatar usually takes image)
+    image?: string
 }
 
 import { redirect } from "next/navigation"

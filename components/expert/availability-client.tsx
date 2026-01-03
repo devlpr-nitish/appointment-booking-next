@@ -7,13 +7,12 @@ import { AvailabilityList } from "@/components/expert/availability-list"
 import { AvailabilityForm } from "@/components/expert/availability-form"
 import { useToast } from "@/hooks/use-toast"
 import {
-    getExpertAvailability,
-    createAvailability,
-    updateAvailability,
-    deleteAvailability,
-    type AvailabilitySlot,
-    type CreateAvailabilityData,
-} from "@/lib/data/availability"
+    getAvailabilityAction,
+    createAvailabilityAction,
+    updateAvailabilityAction,
+    deleteAvailabilityAction
+} from "@/app/actions/expert"
+import type { AvailabilitySlot, CreateAvailabilityData } from "@/lib/data/availability"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -25,11 +24,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-interface AvailabilityClientProps {
-    token: string
-}
-
-export function AvailabilityClient({ token }: AvailabilityClientProps) {
+export function AvailabilityClient() {
     const [slots, setSlots] = useState<AvailabilitySlot[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -46,8 +41,16 @@ export function AvailabilityClient({ token }: AvailabilityClientProps) {
     const loadAvailability = async () => {
         try {
             setIsLoading(true)
-            const data = await getExpertAvailability(token)
-            setSlots(data)
+            const result = await getAvailabilityAction()
+            if (result.success) {
+                setSlots(result.data)
+            } else {
+                toast({
+                    title: "Error",
+                    description: result.message || "Failed to load availability.",
+                    variant: "destructive",
+                })
+            }
         } catch (error) {
             toast({
                 title: "Error",
@@ -62,8 +65,13 @@ export function AvailabilityClient({ token }: AvailabilityClientProps) {
     const handleCreate = async (data: CreateAvailabilityData) => {
         try {
             setIsSubmitting(true)
-            const newSlot = await createAvailability(token, data)
-            setSlots([...slots, newSlot])
+            const result = await createAvailabilityAction(data)
+
+            if (!result.success) {
+                throw new Error(result.message)
+            }
+
+            setSlots([...slots, result.data])
             setShowForm(false)
             toast({
                 title: "Success",
@@ -75,7 +83,6 @@ export function AvailabilityClient({ token }: AvailabilityClientProps) {
                 description: error instanceof Error ? error.message : "Failed to add availability.",
                 variant: "destructive",
             })
-            throw error
         } finally {
             setIsSubmitting(false)
         }
@@ -86,8 +93,13 @@ export function AvailabilityClient({ token }: AvailabilityClientProps) {
 
         try {
             setIsSubmitting(true)
-            const updatedSlot = await updateAvailability(token, editingSlot.id, data)
-            setSlots(slots.map((slot) => (slot.id === editingSlot.id ? updatedSlot : slot)))
+            const result = await updateAvailabilityAction(editingSlot.id, data)
+
+            if (!result.success) {
+                throw new Error(result.message)
+            }
+
+            setSlots(slots.map((slot) => (slot.id === editingSlot.id ? result.data : slot)))
             setEditingSlot(null)
             toast({
                 title: "Success",
@@ -99,7 +111,6 @@ export function AvailabilityClient({ token }: AvailabilityClientProps) {
                 description: error instanceof Error ? error.message : "Failed to update availability.",
                 variant: "destructive",
             })
-            throw error
         } finally {
             setIsSubmitting(false)
         }
@@ -110,7 +121,12 @@ export function AvailabilityClient({ token }: AvailabilityClientProps) {
 
         try {
             setIsSubmitting(true)
-            await deleteAvailability(token, deleteId)
+            const result = await deleteAvailabilityAction(deleteId)
+
+            if (!result.success) {
+                throw new Error(result.message)
+            }
+
             setSlots(slots.filter((slot) => slot.id !== deleteId))
             setDeleteId(null)
             toast({
@@ -120,7 +136,7 @@ export function AvailabilityClient({ token }: AvailabilityClientProps) {
         } catch (error) {
             toast({
                 title: "Error",
-                description: "Failed to delete availability. Please try again.",
+                description: error instanceof Error ? error.message : "Failed to delete availability.",
                 variant: "destructive",
             })
         } finally {

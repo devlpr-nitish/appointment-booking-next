@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { API_BASE_URL } from "@/lib/config"
+import { registerAction } from "@/app/actions/auth"
 
 export function SignupForm() {
     const router = useRouter()
@@ -38,16 +38,10 @@ export function SignupForm() {
         setLoading(true)
 
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, password, role }),
-            })
+            const result = await registerAction(name, email, password, role)
 
-            const data = await response.json()
-
-            if (!data.success) {
-                setError(data.error?.details || data.message || "Signup failed")
+            if (!result.success) {
+                setError(result.message || "Signup failed")
                 return
             }
 

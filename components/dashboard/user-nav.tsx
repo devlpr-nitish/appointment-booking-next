@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { LogOut, Settings, UserIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type { User } from "@/lib/auth"
+import { logoutAction } from "@/app/actions/auth"
 
 interface UserNavProps {
   user: User
@@ -22,7 +23,7 @@ export function UserNav({ user }: UserNavProps) {
   const router = useRouter()
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" })
+    await logoutAction()
     router.push("/")
     router.refresh()
   }

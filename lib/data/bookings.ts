@@ -1,9 +1,8 @@
 import { mockAppointments, type Appointment } from "./appointments"
 
-export interface TimeSlot {
-  time: string
-  available: boolean
-  id?: number
+export interface TimeRange {
+  start: string
+  end: string
 }
 
 export interface BookingRequest {
@@ -15,24 +14,12 @@ export interface BookingRequest {
   slotId?: string
 }
 
-export async function getAvailableSlots(expertId: string, date: string): Promise<TimeSlot[]> {
-  // In production, check expert availability and existing bookings
-  const slots: TimeSlot[] = []
-  const hours = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"]
-
-  for (const time of hours) {
-    // Check if slot is already booked
-    const isBooked = mockAppointments.some(
-      (appt) => appt.expertId === expertId && appt.date === date && appt.time === time && appt.status !== "cancelled",
-    )
-
-    slots.push({
-      time,
-      available: !isBooked,
-    })
-  }
-
-  return slots
+export async function getAvailableSlots(expertId: string, date: string): Promise<TimeRange[]> {
+  // Mock implementation returning a full day range
+  return [
+    { start: "09:00", end: "12:00" },
+    { start: "13:00", end: "17:00" }
+  ]
 }
 
 import { cookies } from "next/headers"

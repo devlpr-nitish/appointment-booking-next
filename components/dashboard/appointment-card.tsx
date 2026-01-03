@@ -9,6 +9,7 @@ import type { Appointment } from "@/lib/data/appointments"
 import { format } from "date-fns"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { cancelAppointmentAction } from "@/app/actions/user"
 
 interface AppointmentCardProps {
     appointment: Appointment
@@ -23,11 +24,9 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
 
         setLoading(true)
         try {
-            const response = await fetch(`/api/appointments/${appointment.id}/cancel`, {
-                method: "POST",
-            })
+            const result = await cancelAppointmentAction(parseInt(appointment.id)) // Assuming id is number-string
 
-            if (response.ok) {
+            if (result.success) {
                 router.refresh()
             }
         } catch (error) {
