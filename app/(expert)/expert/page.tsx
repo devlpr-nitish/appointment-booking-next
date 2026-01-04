@@ -8,15 +8,37 @@ import { getExpertProfile, getExpertStats } from "@/lib/data/expert-profile"
 import { Badge } from "@/components/ui/badge"
 import { Suspense } from "react"
 import { ExpertDashboardLoading } from "@/components/expert/expert-dashboard-loading"
-
-async function ExpertDashboardContent({ userId }: { userId: string }) {
+import { getExpertBookings } from "@/app/actions/booking-actions"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { ExpertBookingsList } from "@/components/expert/expert-bookings-list"
+async function ExpertDashboardContent({ userId, user }: { userId: string, user: any }) {
   const expertProfile = await getExpertProfile(userId)
-
+  console.log(expertProfile)
+  
   if (!expertProfile) {
-    redirect("/become-expert")
+    return (
+      <div className="min-h-screen bg-background">
+        <ExpertDashboardHeader user={user} />
+        <main className="container mx-auto px-4 py-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Complete Your Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4">You need to complete your expert profile to access the dashboard.</p>
+              <Button asChild>
+                <Link href="/become-expert">Setup Profile</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    )
   }
 
   const stats = await getExpertStats(expertProfile.id)
+  const bookings = await getExpertBookings()
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -94,6 +116,13 @@ async function ExpertDashboardContent({ userId }: { userId: string }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Bookings Section */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4">Bookings</h2>
+        <ExpertBookingsList bookings={bookings} />
+      </div>
+
     </main>
   )
 }
@@ -106,7 +135,7 @@ export default async function ExpertDashboardPage() {
       <ExpertDashboardHeader user={user} />
 
       <Suspense fallback={<ExpertDashboardLoading />}>
-        <ExpertDashboardContent userId={user.id} />
+        <ExpertDashboardContent userId={user.id} user={user} />
       </Suspense>
     </div>
   )
