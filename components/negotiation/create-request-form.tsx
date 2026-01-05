@@ -16,9 +16,15 @@ import { createRequest, getCategories, Category } from "@/lib/data/negotiation";
 
 const formSchema = z.object({
     category_id: z.string().min(1, "Please select a category"),
-    amount: z.coerce.number().min(1, "Amount must be greater than 0"),
+    amount: z.number().min(1, "Amount must be greater than 0"),
     description: z.string().min(10, "Description must be at least 10 characters"),
 });
+
+type FormValues = {
+    category_id: string;
+    amount: number;
+    description: string;
+};
 
 export function CreateRequestForm() {
     const router = useRouter();
@@ -42,7 +48,7 @@ export function CreateRequestForm() {
         fetchCategories();
     }, [toast]);
 
-    const form = useForm<z.infer<typeof formSchema>>({
+    const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             category_id: "",
@@ -51,7 +57,7 @@ export function CreateRequestForm() {
         },
     });
 
-    async function onSubmit(values: z.infer<typeof formSchema>) {
+    async function onSubmit(values: FormValues) {
         setIsLoading(true);
         try {
             await createRequest(values.category_id, values.amount, values.description);
@@ -112,7 +118,12 @@ export function CreateRequestForm() {
                                 <FormItem>
                                     <FormLabel>Proposed Amount ($)</FormLabel>
                                     <FormControl>
-                                        <Input type="number" step="0.01" {...field} />
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            {...field}
+                                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

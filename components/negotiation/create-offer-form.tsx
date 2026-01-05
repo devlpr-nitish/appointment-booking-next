@@ -11,8 +11,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-    amount: z.coerce.number().min(1, "Amount must be greater than 0"),
+    amount: z.number().min(1, "Amount must be greater than 0"),
 });
+
+type FormValues = {
+    amount: number;
+};
 
 interface CreateOfferFormProps {
     requestId: string;
@@ -23,14 +27,14 @@ export function CreateOfferForm({ requestId, onSuccess }: CreateOfferFormProps) 
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
 
-    const form = useForm<z.infer<typeof formSchema>>({
+    const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             amount: 0,
         },
     });
 
-    async function onSubmit(values: z.infer<typeof formSchema>) {
+    async function onSubmit(values: FormValues) {
         setIsLoading(true);
         try {
             await createOffer(requestId, values.amount);
@@ -61,7 +65,12 @@ export function CreateOfferForm({ requestId, onSuccess }: CreateOfferFormProps) 
                         <FormItem>
                             <FormLabel>Your Offer ($)</FormLabel>
                             <FormControl>
-                                <Input type="number" step="0.01" {...field} />
+                                <Input
+                                    type="number"
+                                    step="0.01"
+                                    {...field}
+                                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                                />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
