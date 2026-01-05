@@ -79,7 +79,7 @@ async function ExpertDashboardContent({ userId, user }: { userId: string, user: 
       </div>
 
       {/* Profile Overview */}
-      <div className="grid gap-6 md:grid-cols-2 mb-8">
+      {/* <div className="grid gap-6 md:grid-cols-2 mb-8">
         <Card>
           <CardHeader>
             <CardTitle>Profile Overview</CardTitle>
@@ -115,7 +115,7 @@ async function ExpertDashboardContent({ userId, user }: { userId: string, user: 
             )}
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       {/* Bookings Section */}
       <div className="mb-8">

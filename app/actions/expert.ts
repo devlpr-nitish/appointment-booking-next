@@ -45,6 +45,10 @@ export async function updateExpertProfileAction(data: Partial<Expert>) {
             payload.hourly_rate = data.hourlyRate
             delete payload.hourlyRate
         }
+        if (data.categoryId !== undefined) {
+            payload.category_id = data.categoryId
+            delete payload.categoryId
+        }
         // Add other fields if needed, e.g. totalSessions -> total_sessions (though usually read-only)
 
         const res = await fetch(`${API_BASE_URL}/expert/profile`, {

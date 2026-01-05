@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/toaster"
 import { SessionProvider } from "@/components/providers/session-provider"
+import { WebSocketProvider } from "@/components/providers/websocket-provider"
 import { getSession } from "@/lib/auth"
 import "./globals.css"
 
@@ -23,9 +24,11 @@ export default async function RootLayout({
     <html lang="en" className="dark">
       <body className="font-sans antialiased">
         <SessionProvider user={user}>
-          {children}
-          <Toaster />
-          <Analytics />
+          <WebSocketProvider>
+            {children}
+            <Toaster />
+            <Analytics />
+          </WebSocketProvider>
         </SessionProvider>
       </body>
     </html>

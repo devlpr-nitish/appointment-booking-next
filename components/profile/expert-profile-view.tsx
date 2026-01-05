@@ -8,8 +8,15 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { getExpertProfileAction, updateExpertProfileAction } from "@/app/actions/expert"
+import { getCategoriesAction } from "@/app/actions/category"
 import { Loader2, Save, Edit2, CheckCircle2, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+interface Category {
+    id: string
+    name: string
+}
 
 interface ExpertProfile {
     id: number
@@ -18,6 +25,8 @@ interface ExpertProfile {
     expertise: string
     hourly_rate: number
     is_verified: boolean
+    category_id?: string
+    category?: Category
     user: {
         id: number
         name: string
@@ -39,14 +48,18 @@ export function ExpertProfileView({ userId }: ExpertProfileViewProps) {
     const [success, setSuccess] = useState("")
     const [profile, setProfile] = useState<ExpertProfile | null>(null)
     const [completionPercentage, setCompletionPercentage] = useState(0)
+    const [categories, setCategories] = useState<Category[]>([])
+    const [loadingCategories, setLoadingCategories] = useState(false)
 
     // Form state
     const [bio, setBio] = useState("")
     const [expertise, setExpertise] = useState("")
     const [hourlyRate, setHourlyRate] = useState("")
+    const [categoryId, setCategoryId] = useState("")
 
     useEffect(() => {
         fetchProfile()
+        fetchCategories()
     }, [])
 
     const fetchProfile = async () => {
@@ -72,10 +85,26 @@ export function ExpertProfileView({ userId }: ExpertProfileViewProps) {
             setBio(result.data.expert.bio || "")
             setExpertise(result.data.expert.expertise || "")
             setHourlyRate(result.data.expert.hourlyRate?.toString() || "")
+            setCategoryId(result.data.expert.category_id || "")
         } catch (err) {
             setError("An error occurred while loading your profile")
         } finally {
             setLoading(false)
+        }
+    }
+
+    const fetchCategories = async () => {
+        try {
+            setLoadingCategories(true)
+            const result = await getCategoriesAction()
+
+            if (result.success && result.data) {
+                setCategories(result.data)
+            }
+        } catch (err) {
+            console.error("Error loading categories:", err)
+        } finally {
+            setLoadingCategories(false)
         }
     }
 
@@ -89,6 +118,7 @@ export function ExpertProfileView({ userId }: ExpertProfileViewProps) {
                 bio,
                 expertise,
                 hourlyRate: parseFloat(hourlyRate) || 0,
+                categoryId: categoryId || undefined,
             })
 
             if (!result.success) {
@@ -115,6 +145,7 @@ export function ExpertProfileView({ userId }: ExpertProfileViewProps) {
             setBio(profile.bio || "")
             setExpertise(profile.expertise || "")
             setHourlyRate(profile.hourly_rate?.toString() || "")
+            setCategoryId(profile.category_id || "")
         }
         setIsEditing(false)
         setError("")
@@ -255,19 +286,35 @@ export function ExpertProfileView({ userId }: ExpertProfileViewProps) {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="expertise">
-                                Expertise / Category <span className="text-destructive">*</span>
+                            <Label htmlFor="category">
+                                Category <span className="text-destructive">*</span>
                             </Label>
                             {isEditing ? (
-                                <Input
-                                    id="expertise"
-                                    placeholder="e.g., Web Development, Marketing, Design"
-                                    value={expertise}
-                                    onChange={(e) => setExpertise(e.target.value)}
-                                />
+                                <Select value={categoryId} onValueChange={setCategoryId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {loadingCategories ? (
+                                            <div className="p-2 text-center text-sm text-muted-foreground">
+                                                Loading categories...
+                                            </div>
+                                        ) : categories.length > 0 ? (
+                                            categories.map((category) => (
+                                                <SelectItem key={category.id} value={category.id}>
+                                                    {category.name}
+                                                </SelectItem>
+                                            ))
+                                        ) : (
+                                            <div className="p-2 text-center text-sm text-muted-foreground">
+                                                No categories available
+                                            </div>
+                                        )}
+                                    </SelectContent>
+                                </Select>
                             ) : (
                                 <p className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-md">
-                                    {expertise || "No expertise specified"}
+                                    {profile?.category?.name || "No category selected"}
                                 </p>
                             )}
                         </div>

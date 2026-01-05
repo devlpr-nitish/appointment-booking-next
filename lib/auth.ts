@@ -12,6 +12,7 @@ export interface Expert {
     verified: boolean
     imageUrl: string
     reviews: any[]
+    categoryId?: string
 }
 
 export interface User {
