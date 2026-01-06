@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { LogOut, Settings, UserIcon } from "lucide-react"
+import { LogOut, Settings, UserIcon, HandshakeIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type { User } from "@/lib/auth"
 import { logoutAction } from "@/app/actions/auth"
@@ -59,6 +59,10 @@ export function UserNav({ user }: UserNavProps) {
         <DropdownMenuItem onClick={() => router.push("/user/profile")}>
           <UserIcon className="mr-2 h-4 w-4" />
           <span>Profile</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push("/requests/create")}>
+          <HandshakeIcon className="mr-2 h-4 w-4" />
+          <span>Create Request</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">

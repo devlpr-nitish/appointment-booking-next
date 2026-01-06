@@ -1,30 +1,34 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Request, Offer, getRequest, getRequestOffers, acceptOffer } from "@/lib/data/negotiation";
-import { OfferList } from "@/components/negotiation/offer-list";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { useActionToast } from "@/components/providers/action-toast-provider";
 import { useWebSocket } from "@/components/providers/websocket-provider";
+import { OfferList } from "@/components/negotiation/offer-list";
+import { format } from "date-fns";
 
 export default function RequestDetailPage() {
     const params = useParams();
-    const id = params?.id as string;
+    const router = useRouter();
     const { toast } = useToast();
+    const { showToast } = useActionToast();
     const { subscribe } = useWebSocket();
 
     const [request, setRequest] = useState<Request | null>(null);
     const [offers, setOffers] = useState<Offer[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const requestId = params?.id as string;
+
     const fetchData = useCallback(async () => {
         try {
             const [reqData, offersData] = await Promise.all([
-                getRequest(id),
-                getRequestOffers(id)
+                getRequest(requestId),
+                getRequestOffers(requestId)
             ]);
             setRequest(reqData);
             setOffers(offersData);
@@ -32,46 +36,20 @@ export default function RequestDetailPage() {
             toast({
                 variant: "destructive",
                 title: "Error",
-                description: "Failed to fetch request details",
+                description: "Failed to load request details",
             });
         } finally {
             setLoading(false);
         }
-    }, [id, toast]);
-
-    useEffect(() => {
-        if (id) {
-            fetchData();
-
-            // Subscribe to real-time updates
-            const unsubscribeOffer = subscribe("NEW_OFFER", (payload) => {
-                if (payload.request_id === id) {
-                    toast({ title: "New Offer Received!", description: "An expert has sent a counter-offer." });
-                    fetchData();
-                }
-            });
-
-            const unsubscribeAccept = subscribe("OFFER_ACCEPTED", (payload) => {
-                if (payload.request_id === id) {
-                    fetchData();
-                }
-            });
-
-            return () => {
-                unsubscribeOffer();
-                unsubscribeAccept();
-            };
-        }
-    }, [id, fetchData, subscribe, toast]);
+    }, [requestId, toast]);
 
     const handleAcceptOffer = async (offerId: string) => {
         try {
             await acceptOffer(offerId);
             toast({
                 title: "Success",
-                description: "Offer accepted!",
+                description: "Offer accepted successfully",
             });
-            // Refresh data
             fetchData();
         } catch (error) {
             toast({
@@ -81,6 +59,43 @@ export default function RequestDetailPage() {
             });
         }
     };
+
+    useEffect(() => {
+        fetchData();
+
+        // Subscribe to NEW_OFFER events for this request
+        const unsubscribeOffer = subscribe("NEW_OFFER", async (payload: any) => {
+            if (payload.request_id === requestId) {
+                // Show interactive toast with accept option
+                showToast({
+                    id: payload.offer_id,
+                    title: "New Counter-Offer Received",
+                    description: "An expert has sent you a counter-offer",
+                    amount: payload.amount,
+                    type: "offer",
+                    autoCloseMs: 20000, // 20 seconds for offers
+                    onAccept: () => handleAcceptOffer(payload.offer_id),
+                });
+
+                // Refresh offers list
+                fetchData();
+            }
+        });
+
+        // Subscribe to OFFER_ACCEPTED events
+        const unsubscribeAccepted = subscribe("OFFER_ACCEPTED", (payload: any) => {
+            toast({
+                title: "Offer Status Updated",
+                description: "An offer has been accepted",
+            });
+            fetchData();
+        });
+
+        return () => {
+            unsubscribeOffer();
+            unsubscribeAccepted();
+        };
+    }, [fetchData, subscribe, requestId, toast, showToast]);
 
     if (loading) return <div>Loading...</div>;
     if (!request) return <div>Request not found</div>;

@@ -2,16 +2,18 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { Request, getExpertRequests } from "@/lib/data/negotiation";
+import { Request, getExpertRequests, getRequest } from "@/lib/data/negotiation";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useActionToast } from "@/components/providers/action-toast-provider";
 import { format } from "date-fns";
 import { useWebSocket } from "@/components/providers/websocket-provider";
 
 export default function ExpertRequestsPage() {
     const { toast } = useToast();
+    const { showToast } = useActionToast();
     const { subscribe } = useWebSocket();
     const [requests, setRequests] = useState<Request[]>([]);
     const [loading, setLoading] = useState(true);
@@ -34,14 +36,37 @@ export default function ExpertRequestsPage() {
     useEffect(() => {
         fetchData();
 
-        const unsubscribe = subscribe("NEW_REQUEST", (payload) => {
-            // Optimally check if category matches, but for now just refresh
-            toast({ title: "New Request", description: "A new request matches your expertise." });
-            fetchData();
+        const unsubscribe = subscribe("NEW_REQUEST", async (payload: any) => {
+            // Fetch the full request details
+            try {
+                const requestDetails = await getRequest(payload.request_id);
+
+                // Show interactive toast
+                showToast({
+                    id: payload.request_id,
+                    title: "New Request Available",
+                    description: requestDetails.description || "A new request matches your expertise",
+                    amount: requestDetails.initial_amount,
+                    categoryName: requestDetails.category?.name,
+                    type: "request",
+                    autoCloseMs: 15000,
+                });
+
+                // Refresh the list
+                fetchData();
+            } catch (error) {
+                console.error("Failed to fetch request details:", error);
+                // Fallback to simple notification
+                toast({
+                    title: "New Request",
+                    description: "A new request matches your expertise."
+                });
+                fetchData();
+            }
         });
 
         return () => unsubscribe();
-    }, [fetchData, subscribe, toast]);
+    }, [fetchData, subscribe, toast, showToast]);
 
     if (loading) return <div>Loading...</div>;
 

@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/layout/site-header"
 import { SiteFooter } from "@/components/layout/site-footer"
 import { HeroSection } from "@/components/landing/hero-section"
 import { FeaturesSection } from "@/components/landing/features-section"
+import { NegotiationSection } from "@/components/landing/negotiation-section"
 import { ExpertsSection } from "@/components/landing/experts-section"
 import { CTASection } from "@/components/landing/cta-section"
 import { getFeaturedExperts } from "@/lib/data/experts"
@@ -15,6 +16,7 @@ export default async function HomePage() {
       <main className="flex-1">
         <HeroSection />
         <FeaturesSection />
+        <NegotiationSection />
         <ExpertsSection experts={experts} />
         <CTASection />
       </main>

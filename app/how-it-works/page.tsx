@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/layout/site-header"
 import { SiteFooter } from "@/components/layout/site-footer"
 import { HeroSection } from "@/components/how-it-works/hero-section"
 import { StepsSection } from "@/components/how-it-works/steps-section"
+import { NegotiationWorkflowSection } from "@/components/how-it-works/negotiation-workflow-section"
 import { RolesSection } from "@/components/how-it-works/roles-section"
 import { FeaturesSection } from "@/components/how-it-works/features-section"
 import { CTASection } from "@/components/how-it-works/cta-section"
@@ -13,6 +14,7 @@ export default function HowItWorksPage() {
             <main className="flex flex-col mx-auto">
                 <HeroSection />
                 <StepsSection />
+                <NegotiationWorkflowSection />
                 <RolesSection />
                 <FeaturesSection />
                 <CTASection />
