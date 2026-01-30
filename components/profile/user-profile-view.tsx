@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Mail, Shield } from "lucide-react"
-import { logoutAction } from "@/app/actions/auth"
+import { logoutAction, updateProfileAction } from "@/app/actions/auth"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 
@@ -27,6 +27,10 @@ export function UserProfileView({ user }: UserProfileViewProps) {
     const [name, setName] = useState(user.name)
     // Email is usually not editable easily without verification, keeping it read-only for now
 
+    // State for image upload
+    const [isUploading, setIsUploading] = useState(false)
+    const [profileImage, setProfileImage] = useState(user.image)
+
     const handleLogout = async () => {
         await logoutAction()
         router.push("/")
@@ -35,14 +39,73 @@ export function UserProfileView({ user }: UserProfileViewProps) {
 
     const handleUpdateProfile = async () => {
         setIsLoading(true)
-        // Simulate API call since we don't have a user update endpoint yet
-        await new Promise(resolve => setTimeout(resolve, 1000))
 
+        // Use FormData to support future file uploads from settings tab if needed
+        // but currently settings tab only has name
+        const formData = new FormData()
+        formData.append("name", name)
+
+        // If we wanted to update image from settings tab too, we'd need a file input there
+        // For now, settings tab just updates name. 
+        // But backend expects multipart if we changed it to multipart.
+        // Wait, I updated backend to support multipart OR fallback to json if ParseMultipartForm fails?
+        // No, I updated backend to ParseMultipartForm. If that fails (e.g. JSON request), it might error or return nil error but empty form.
+        // It's safer to send FormData even for just name updates now.
+
+        const res = await updateProfileAction(formData)
+
+        if (!res.success) {
+            toast({
+                title: "Profile Update Failed",
+                description: res.message,
+                variant: "destructive",
+            })
+            setIsLoading(false)
+            return
+        }
+        router.refresh()
         toast({
             title: "Profile Updated",
             description: "Your profile information has been updated successfully.",
         })
         setIsLoading(false)
+    }
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setIsUploading(true)
+        const formData = new FormData()
+        formData.append("image", file)
+        // Also send current name to avoid clearing it? 
+        // The backend logic: if name is empty, it keeps existing name.
+
+        const res = await updateProfileAction(formData)
+
+        console.log(res)
+
+        if (!res.success) {
+            toast({
+                title: "Image Upload Failed",
+                description: res.message,
+                variant: "destructive",
+            })
+            setIsUploading(false)
+            return
+        }
+
+        // Optimistic update or use returned data
+        if (res.data?.user?.image_url) {
+            setProfileImage(res.data.user.image_url)
+        }
+
+        router.refresh()
+        toast({
+            title: "Image Updated",
+            description: "Your profile picture has been updated.",
+        })
+        setIsUploading(false)
     }
 
     const initials = user.name
@@ -56,14 +119,51 @@ export function UserProfileView({ user }: UserProfileViewProps) {
         <div className="container max-w-4xl py-8 space-y-8 mx-auto">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
-                <Avatar className="h-24 w-24 border-4 border-background shadow-xl">
-                    <AvatarImage src={user.image} alt={user.name} />
-                    <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                        {initials}
-                    </AvatarFallback>
-                </Avatar>
+                <div className="relative group">
+                    <Avatar className="h-24 w-24 border-4 border-background shadow-xl cursor-pointer">
+                        <AvatarImage src={profileImage || user.image} alt={user.name} />
+
+                        <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+                            {initials}
+                        </AvatarFallback>
+                    </Avatar>
+
+                    <label
+                        htmlFor="profile-image-upload"
+                        className="absolute bottom-0 right-0 p-1 bg-primary text-primary-foreground rounded-full shadow-lg cursor-pointer hover:bg-primary/90 transition-colors"
+                    >
+                        {isUploading ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : (
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="lucide lucide-pencil"
+                            >
+                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                <path d="m15 5 4 4" />
+                            </svg>
+                        )}
+                        <input
+                            id="profile-image-upload"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageUpload}
+                            disabled={isUploading}
+                        />
+                    </label>
+                </div>
 
                 <div className="flex-1 text-center md:text-left space-y-2">
+                    {/* ... rest of header ... */}
                     <h1 className="text-3xl font-bold">{user.name}</h1>
                     <div className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground">
                         <Mail className="h-4 w-4" />

@@ -51,6 +51,7 @@ export async function getSession(): Promise<User | null> {
             name: payload.name || "User",
             email: payload.email || "",
             role: payload.role || "user",
+            image: payload.image_url || "",
             isExpert: payload.role === "expert",
         }
     } catch (error) {

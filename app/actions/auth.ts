@@ -86,3 +86,47 @@ export async function logoutAction() {
 
     return { success: true }
 }
+
+export async function updateProfileAction(formData: FormData) {
+    const cookieStore = await cookies()
+    const token = cookieStore.get("token")?.value
+
+    if (!token) {
+        return { success: false, message: "Unauthorized" }
+    }
+
+    try {
+        // If we are sending a file, we should not set Content-Type header manually
+        // fetch will set it to multipart/form-data with boundary
+        const res = await fetch(`${API_BASE_URL}/auth/update-profile`, {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            },
+            body: formData,
+        })
+
+        const data = await res.json()
+
+        if (!data.success) {
+            return {
+                success: false,
+                message: data.error?.details || data.message || "Profile update failed"
+            }
+        }
+
+        // Update session cookie with new token if provided
+        if (data.data.token) {
+            cookieStore.set("token", data.data.token, {
+                path: "/",
+                maxAge: 86400,
+                sameSite: "strict",
+                httpOnly: true
+            })
+        }
+
+        return { success: true, data: data.data }
+    } catch (error) {
+        return { success: false, message: "An error occurred during profile update." }
+    }
+}
