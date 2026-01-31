@@ -5,10 +5,10 @@ import { FeaturesSection } from "@/components/landing/features-section"
 import { NegotiationSection } from "@/components/landing/negotiation-section"
 import { ExpertsSection } from "@/components/landing/experts-section"
 import { CTASection } from "@/components/landing/cta-section"
-import { getFeaturedExperts } from "@/lib/data/experts"
+import { getFeaturedExpertsAction } from "@/app/actions/expert"
 
 export default async function HomePage() {
-  const experts = await getFeaturedExperts(6)
+  const experts = await getFeaturedExpertsAction(6)
 
   return (
     <div className="flex min-h-screen flex-col">

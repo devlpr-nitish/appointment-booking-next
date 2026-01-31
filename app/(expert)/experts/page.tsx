@@ -1,5 +1,5 @@
 import { SiteHeader } from "@/components/layout/site-header"
-import { getExpertsPaginated } from "@/lib/data/experts"
+import { getExpertsAction } from "@/app/actions/expert"
 import { ExpertCard } from "@/components/landing/expert-card"
 import { ExpertFilters } from "@/components/expert/expert-filters"
 import { Button } from "@/components/ui/button"
@@ -13,11 +13,10 @@ export default async function ExpertsPage({
   const resolvedSearchParams = await searchParams
   const page = typeof resolvedSearchParams.page === "string" ? parseInt(resolvedSearchParams.page) : 1
   const category = typeof resolvedSearchParams.category === "string" ? resolvedSearchParams.category : undefined
+  const search = typeof resolvedSearchParams.search === "string" ? resolvedSearchParams.search : undefined
   const limit = 9 // 3x3 grid
 
-  const { experts, meta } = await getExpertsPaginated(page, limit, category)
-
-  console.log("experts", experts);
+  const { experts, meta } = await getExpertsAction(page, limit, category, search);
 
   return (
     <div className="min-h-screen bg-background">

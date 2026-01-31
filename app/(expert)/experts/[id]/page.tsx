@@ -1,4 +1,4 @@
-import { getExpertById } from "@/lib/data/experts"
+import { getExpertByIdAction } from "@/app/actions/expert"
 import { notFound } from "next/navigation"
 import { SiteHeader } from "@/components/layout/site-header"
 import { Card, CardContent } from "@/components/ui/card"
@@ -14,7 +14,7 @@ interface ExpertProfilePageProps {
 
 export default async function ExpertProfilePage({ params }: ExpertProfilePageProps) {
   const { id } = await params
-  const expert = await getExpertById(id)
+  const expert = await getExpertByIdAction(id)
 
   if (!expert) {
     notFound()

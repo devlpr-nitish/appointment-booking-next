@@ -1,4 +1,12 @@
 
+export interface Review {
+    id: string
+    author: string
+    rating: number
+    comment: string
+    date: string
+}
+
 export interface Expert {
     id: string
     userId: string
@@ -11,7 +19,7 @@ export interface Expert {
     totalSessions: number
     verified: boolean
     imageUrl: string
-    reviews: any[]
+    reviews: Review[]
     categoryId?: string
 }
 

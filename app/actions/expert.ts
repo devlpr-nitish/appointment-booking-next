@@ -4,6 +4,176 @@ import { cookies } from "next/headers"
 import { API_BASE_URL } from "@/lib/config"
 import { revalidatePath } from "next/cache"
 import type { Expert } from "@/lib/auth"
+import { mockExperts } from "@/lib/data/experts"
+
+// ... existing imports
+
+interface ExpertsApiResponse {
+    success: boolean
+    message: string
+    data: {
+        experts: any[]
+        meta: {
+            current_page: number
+            total_pages: number
+            total_items: number
+            limit: number
+        }
+    }
+}
+
+export async function getExpertsAction(page = 1, limit = 10, category?: string, search?: string) {
+    try {
+        const cookieStore = await cookies()
+        const token = cookieStore.get("token")?.value
+
+        const headers: HeadersInit = {}
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`
+        }
+
+        let url = `${API_BASE_URL}/expert/get-experts?page=${page}&limit=${limit}`
+        let isSearch = false
+
+        if ((category && category !== 'all') || search) {
+            const params = new URLSearchParams()
+            if (category && category !== 'all') params.set("category", category)
+            if (search) params.set("q", search)
+
+            url = `${API_BASE_URL}/expert/search?${params.toString()}`
+            isSearch = true
+        }
+
+        const res = await fetch(url, {
+            method: "GET",
+            headers: headers,
+            cache: 'no-store'
+        })
+
+        if (!res.ok) {
+            console.error("Failed to fetch experts", await res.text())
+            return {
+                experts: [],
+                meta: {
+                    current_page: page,
+                    total_pages: 0,
+                    total_items: 0,
+                    limit: limit
+                }
+            }
+        }
+
+        const json = await res.json()
+
+        if (!json.success) {
+            throw new Error(json.message)
+        }
+
+        let rawExperts = []
+        let meta = {
+            current_page: page,
+            total_pages: 1,
+            total_items: 0,
+            limit: limit
+        }
+
+        if (isSearch) {
+            rawExperts = Array.isArray(json.data) ? json.data : []
+            meta.total_items = rawExperts.length
+            meta.total_pages = Math.ceil(rawExperts.length / limit)
+            const start = (page - 1) * limit
+            rawExperts = rawExperts.slice(start, start + limit)
+        } else {
+            rawExperts = json.data.experts
+            meta = json.data.meta
+        }
+
+        const experts: Expert[] = rawExperts.map((item: any) => ({
+            id: item.id?.toString(),
+            userId: item.user_id?.toString() || "",
+            name: item.user?.name || "Unknown Expert",
+            email: item.user?.email || "",
+            expertise: item.expertise,
+            bio: item.bio,
+            hourlyRate: item.hourly_rate,
+            rating: 0,
+            totalSessions: 0,
+            verified: item.is_verified,
+            imageUrl: item.user?.image || "/placeholder-user.jpg",
+            reviews: []
+        }))
+
+        return { experts, meta }
+
+    } catch (error) {
+        console.error("Error fetching experts:", error)
+        return {
+            experts: [],
+            meta: { current_page: 1, total_pages: 1, total_items: 0, limit }
+        }
+    }
+}
+
+export async function getExpertByIdAction(id: string): Promise<Expert | null> {
+    try {
+        const cookieStore = await cookies()
+        const token = cookieStore.get("token")?.value
+
+        const headers: HeadersInit = {}
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`
+        }
+
+        const res = await fetch(`${API_BASE_URL}/expert/get-expert-by-id/${id}`, {
+            method: "GET",
+            headers: headers,
+            cache: 'no-store'
+        })
+
+        if (!res.ok) {
+            console.error("Failed to fetch expert", await res.text())
+            // Fallback to mock data
+            // We need to cast mockExperts to Expert[] because of type mismatch potentially?
+            // Actually lib/auth Expert has reviews as any[], lib/data Expert has specific Review[].
+            // But checking the file content showed they are compatible enough or identical.
+            // Let's coerce just in case.
+            const mock = mockExperts.find(e => e.id === id) as unknown as Expert
+            return mock || null
+        }
+
+        const json = await res.json()
+        if (!json.success) {
+            throw new Error(json.message)
+        }
+
+        const item = json.data
+
+        return {
+            id: item.id?.toString(),
+            userId: item.user_id?.toString() || "",
+            name: item.user?.name || "Unknown Expert",
+            email: item.user?.email || "",
+            expertise: item.expertise,
+            bio: item.bio,
+            hourlyRate: item.hourly_rate,
+            rating: 0,
+            totalSessions: 0,
+            verified: item.is_verified,
+            imageUrl: item.user?.image || "/placeholder-user.jpg",
+            reviews: []
+        }
+
+    } catch (error) {
+        console.error("Error fetching expert:", error)
+        const mock = mockExperts.find(e => e.id === id) as unknown as Expert
+        return mock || null
+    }
+}
+
+export async function getFeaturedExpertsAction(limit = 6): Promise<Expert[]> {
+    const { experts } = await getExpertsAction(1, limit)
+    return experts
+}
 
 export async function getExpertProfileAction() {
     const cookieStore = await cookies()

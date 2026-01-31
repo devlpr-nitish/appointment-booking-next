@@ -1,4 +1,4 @@
-import { getExpertById } from "@/lib/data/experts"
+import { getExpertByIdAction } from "@/app/actions/expert"
 import { notFound } from "next/navigation"
 import { SiteHeader } from "@/components/layout/site-header"
 import { BookingInterface } from "@/components/booking/booking-interface"
@@ -13,7 +13,7 @@ interface BookingPageProps {
 
 export default async function BookingPage({ params }: BookingPageProps) {
     const { id } = await params
-    const expert = await getExpertById(id)
+    const expert = await getExpertByIdAction(id)
 
     if (!expert) {
         notFound()
@@ -90,8 +90,8 @@ export default async function BookingPage({ params }: BookingPageProps) {
                                                         <Star
                                                             key={i}
                                                             className={`h-3 w-3 ${i < Math.floor(review.rating)
-                                                                    ? "fill-primary text-primary"
-                                                                    : "text-muted-foreground"
+                                                                ? "fill-primary text-primary"
+                                                                : "text-muted-foreground"
                                                                 }`}
                                                         />
                                                     ))}

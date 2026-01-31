@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Star, CheckCircle2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import type { Expert } from "@/lib/data/experts"
+import type { Expert } from "@/lib/auth"
 
 interface ExpertCardProps {
   expert: Expert
