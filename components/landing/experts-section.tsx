@@ -1,6 +1,6 @@
 
 import { ExpertCard } from "@/components/landing/expert-card"
-import type { Expert } from "@/lib/data/experts"
+import type { Expert } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 

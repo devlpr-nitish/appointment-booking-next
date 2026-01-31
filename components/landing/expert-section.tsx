@@ -1,5 +1,5 @@
 import { ExpertCard } from "./expert-card"
-import type { Expert } from "@/lib/data/experts"
+import type { Expert } from "@/lib/auth"
 
 interface ExpertsSectionProps {
   experts: Expert[]

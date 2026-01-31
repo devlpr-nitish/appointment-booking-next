@@ -1,6 +1,7 @@
-import { mockExperts, type Expert } from "./experts"
+import { mockExperts } from "./experts"
 import { cookies } from "next/headers"
 import { API_BASE_URL } from "@/lib/config"
+import { Expert } from "../auth"
 
 export interface ExpertStats {
   totalEarnings: number

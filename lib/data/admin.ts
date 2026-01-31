@@ -1,6 +1,7 @@
-import { mockExperts, type Expert } from "./experts"
+import { mockExperts } from "./experts"
 import { mockAppointments } from "./appointments"
 import { mockUsers } from "./mock-users"
+import { Expert } from "../auth"
 
 export interface PlatformStats {
   totalUsers: number
