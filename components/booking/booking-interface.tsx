@@ -4,12 +4,14 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { TimeSlotPicker } from "./time-slot-picker"
-import { format } from "date-fns"
+import { format, addMonths, subMonths } from "date-fns"
 import type { Expert } from "@/lib/auth"
 import type { TimeRange } from "@/lib/data/bookings"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { createBookingAction, getAvailableSlotsAction } from "@/app/actions/booking"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Clock, Globe, Video, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface BookingInterfaceProps {
     expert: Expert
@@ -18,12 +20,20 @@ interface BookingInterfaceProps {
 export function BookingInterface({ expert }: BookingInterfaceProps) {
     const router = useRouter()
     const [date, setDate] = useState<Date | undefined>(new Date())
+    const [month, setMonth] = useState<Date>(new Date())
     const [startTime, setStartTime] = useState<string>("")
     const [endTime, setEndTime] = useState<string>("")
     const [availableRanges, setAvailableRanges] = useState<TimeRange[]>([])
     const [loadingSlots, setLoadingSlots] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
+    const [is24Hour, setIs24Hour] = useState(false)
+
+    useEffect(() => {
+        if (date) {
+            setMonth(date)
+        }
+    }, [date])
 
     useEffect(() => {
         if (date) {
@@ -69,7 +79,6 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
                 return
             }
 
-            // Redirect to dashboard or success page
             router.push("/user")
             router.refresh()
         } catch (err) {
@@ -80,104 +89,122 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
     }
 
     return (
-        <div className="space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Select Date & Time</CardTitle>
-                    <CardDescription>
-                        Time zone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    {error && (
-                        <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-md border border-destructive/20">
-                            {error}
-                        </div>
-                    )}
+        <div className="flex justify-center px-4 md:px-8 bg-black/5">
+            <div className="w-full max-w-7xl bg-background text-foreground rounded-xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2 border border-border h-[600px]">
 
-                    <div className="flex flex-col md:flex-row gap-8">
-                        <div className="flex-shrink-0">
-                            <h3 className="text-sm font-medium mb-3">Select a Date</h3>
-                            <div className="inline-block bg-background rounded-lg border shadow-sm">
-                                <Calendar
-                                    mode="single"
-                                    date={date}
-                                    onSelect={setDate}
-                                    disabled={(date) => date < new Date() || date < new Date(new Date().setHours(0, 0, 0, 0))}
-                                    className="rounded-lg"
-                                />
-                            </div>
+                <div className="p-8 border-b lg:border-b-0 lg:border-r border-border bg-background flex flex-col h-full">
+                    {/* Fixed Calendar Header */}
+                    <div className="flex items-center justify-between px-4">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setMonth(subMonths(month, 1))}
+                            className="h-10 w-10 rounded-xl hover:bg-white/10 text-gray-300 hover:text-white transition-all"
+                        >
+                            <ChevronLeft className="h-5 w-5" />
+                        </Button>
+                        <div className="text-lg font-semibold text-white">
+                            {format(month, "MMMM yyyy")}
                         </div>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setMonth(addMonths(month, 1))}
+                            className="h-10 w-10 rounded-xl hover:bg-white/10 text-gray-300 hover:text-white transition-all"
+                        >
+                            <ChevronRight className="h-5 w-5" />
+                        </Button>
+                    </div>
 
-                        <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-medium mb-3">
-                                {date ? `Available Times for ${format(date, "MMM d, yyyy")}` : "Select a Date First"}
-                            </h3>
-                            {date ? (
-                                <TimeSlotPicker
-                                    availableRanges={availableRanges}
-                                    startTime={startTime}
-                                    endTime={endTime}
-                                    onTimeChange={(start, end) => {
-                                        setStartTime(start)
-                                        setEndTime(end)
-                                    }}
-                                    isLoading={loadingSlots}
-                                />
-                            ) : (
-                                <div className="p-8 text-center text-muted-foreground border rounded-lg bg-muted/30">
-                                    Please select a date to view available time slots
-                                </div>
-                            )}
+                    <div className="flex items-center justify-center">
+                        <Calendar
+                            mode="single"
+                            //@ts-ignore
+                            date={date}
+                            onSelect={setDate}
+                            month={month}
+                            onMonthChange={setMonth}
+                            disabled={(date) => date < new Date() || date < new Date(new Date().setHours(0, 0, 0, 0))}
+                            className="p-0 w-full max-w-md bg-transparent border-none shadow-none"
+                            classNames={{
+                                month: "space-y-6 w-full",
+                                caption: "hidden",
+                                caption_label: "hidden",
+                                nav: "hidden",
+                                head_row: "flex w-full mb-4 justify-between",
+                                head_cell: "text-gray-500 w-12 h-10 font-medium text-xs uppercase tracking-wider flex items-center justify-center",
+                                row: "flex w-full mt-2 justify-between",
+                                cell: "h-12 w-12 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-transparent focus-within:relative focus-within:z-20",
+                                day: "h-12 w-12 p-0 font-normal text-gray-300 hover:bg-white/10 rounded-xl transition-all aria-selected:opacity-100",
+                                day_selected: "bg-white text-black hover:bg-white hover:text-black font-semibold rounded-xl shadow-md scale-105",
+                                day_today: "text-white font-bold relative after:content-[''] after:absolute after:bottom-2 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-white after:rounded-full",
+                                day_outside: "text-gray-800 opacity-50",
+                                day_disabled: "text-gray-800 opacity-30 cursor-not-allowed hover:bg-transparent",
+                            }}
+                        />
+                    </div>
+                </div>
+
+                <div className="p-8 bg-background flex flex-col h-full overflow-hidden">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="text-lg font-medium text-gray-200">
+                            {date ? format(date, "EEE d") : "Select Date"}
+                        </div>
+                        <div className="flex bg-white/5 rounded-lg p-1 px-1">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIs24Hour(false)}
+                                className={cn("h-7 px-3 text-xs rounded-md transition-all hover:bg-white/5", !is24Hour ? "bg-[#2a2a2a] text-white shadow-sm hover:bg-[#2a2a2a]" : "text-gray-400")}
+                            >
+                                12h
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIs24Hour(true)}
+                                className={cn("h-7 px-3 text-xs rounded-md transition-all hover:bg-white/5", is24Hour ? "bg-[#2a2a2a] text-white shadow-sm hover:bg-[#2a2a2a]" : "text-gray-400")}
+                            >
+                                24h
+                            </Button>
                         </div>
                     </div>
-                </CardContent>
-            </Card>
 
-            {date && startTime && endTime && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Booking Summary</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="p-4 bg-muted rounded-lg mb-6">
-                            <div className="grid gap-2">
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Expert</span>
-                                    <span className="font-medium">{expert.name}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Date</span>
-                                    <span className="font-medium">{format(date, "EEEE, MMMM d, yyyy")}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Time</span>
-                                    <span className="font-medium">{startTime} - {endTime}</span>
-                                </div>
-
-                                <div className="border-t my-2 pt-2 flex justify-between font-bold">
-                                    <span>Total</span>
-                                    <span>${(() => {
-                                        const start = parseInt(startTime.split(':')[0]) + parseInt(startTime.split(':')[1]) / 60
-                                        const end = parseInt(endTime.split(':')[0]) + parseInt(endTime.split(':')[1]) / 60
-                                        const duration = end - start
-                                        return (duration * expert.hourlyRate).toFixed(2)
-                                    })()}</span>
-                                </div>
+                    <div className="flex-1 overflow-y-auto px-2 py-2 custom-scrollbar">
+                        {date ? (
+                            <TimeSlotPicker
+                                availableRanges={availableRanges}
+                                startTime={startTime}
+                                endTime={endTime}
+                                onTimeChange={(start, end) => {
+                                    setStartTime(start)
+                                    setEndTime(end)
+                                }}
+                                isLoading={loadingSlots}
+                                is24Hour={is24Hour}
+                            />
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-gray-500 text-sm">
+                                <CalendarIcon className="w-12 h-12 mb-3 opacity-20" />
+                                <p>Select a date to view times</p>
                             </div>
-                        </div>
+                        )}
+                    </div>
 
-                        <Button
-                            size="lg"
-                            className="w-full"
-                            onClick={handleBook}
-                            disabled={!date || !startTime || !endTime || loading}
-                        >
-                            {loading ? "Requesting..." : "Request Booking"}
-                        </Button>
-                    </CardContent>
-                </Card>
-            )}
-        </div >
+                    {date && startTime && endTime && (
+                        <div className="pt-4 border-t border-white/10 mt-4">
+                            <Button
+                                size="lg"
+                                className="w-full bg-white text-black cursor-pointer hover:bg-gray-200 transition-colors font-medium rounded-xl"
+                                onClick={handleBook}
+                                disabled={loading}
+                            >
+                                {loading ? "Booking..." : `Book ${startTime} - ${endTime}`}
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
     )
 }

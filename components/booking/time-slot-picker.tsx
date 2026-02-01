@@ -1,10 +1,9 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Loader2 } from "lucide-react"
 import type { TimeRange } from "@/lib/data/bookings"
-import { Loader2, Clock } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface TimeSlotPickerProps {
   availableRanges: TimeRange[]
@@ -12,6 +11,7 @@ interface TimeSlotPickerProps {
   endTime: string
   onTimeChange: (start: string, end: string) => void
   isLoading?: boolean
+  is24Hour?: boolean
 }
 
 export function TimeSlotPicker({
@@ -19,76 +19,103 @@ export function TimeSlotPicker({
   startTime,
   endTime,
   onTimeChange,
-  isLoading = false
+  isLoading = false,
+  is24Hour = false
 }: TimeSlotPickerProps) {
+
+  // Helper to format time strings (HH:mm) to 12h/24h format
+  const formatTime = (time: string, use24h: boolean) => {
+    if (!time) return ""
+    if (use24h) return time
+
+    const [hours, minutes] = time.split(':').map(Number)
+    const period = hours >= 12 ? 'pm' : 'am'
+    const h = hours % 12 || 12
+    return `${h}:${minutes.toString().padStart(2, '0')}${period}`
+  }
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-sm text-muted-foreground">Loading available availability...</span>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
       </div>
     )
   }
 
   if (availableRanges.length === 0) {
     return (
-      <div className="flex items-center justify-center py-8 text-center">
-        <div className="text-sm text-muted-foreground">
-          <p className="font-medium">No available slots</p>
-          <p className="mt-1">This expert has no availability on the selected date.</p>
-        </div>
+      <div className="flex flex-col items-center justify-center h-full text-center p-4">
+        <p className="text-gray-400 font-medium">No slots available</p>
+        <p className="text-gray-500 text-sm mt-1">Try selecting another date</p>
       </div>
     )
   }
 
-  const handleRangeClick = (range: TimeRange) => {
-    onTimeChange(range.start, range.end)
-  }
+  const slots: { start: string, end: string, label: string }[] = []
+
+  availableRanges.forEach(range => {
+    const start = range.start.split(':').map(Number)
+    const end = range.end.split(':').map(Number)
+
+    let currentHour = start[0]
+    let currentMinute = start[1]
+
+    const endHour = end[0]
+    const endMinute = end[1]
+
+    // Infinite loop protection
+    let safety = 0
+    while (safety < 100) {
+      safety++
+
+      // Calculate next slot time (30 mins later)
+      let nextHour = currentHour
+      let nextMinute = currentMinute + 30
+      if (nextMinute >= 60) {
+        nextHour++
+        nextMinute -= 60
+      }
+
+      // Check if slot ends after the range end
+      if (nextHour > endHour || (nextHour === endHour && nextMinute > endMinute)) {
+        break
+      }
+
+      const slotStart = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`
+      const slotEnd = `${nextHour.toString().padStart(2, '0')}:${nextMinute.toString().padStart(2, '0')}`
+
+      slots.push({
+        start: slotStart,
+        end: slotEnd,
+        label: formatTime(slotStart, is24Hour)
+      })
+
+      currentHour = nextHour
+      currentMinute = nextMinute
+    }
+  })
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-          <Clock className="w-4 h-4" /> Available Intervals
-        </h4>
-        <div className="flex flex-wrap gap-2">
-          {availableRanges.map((range, idx) => (
-            <Button
-              key={`${range.start}-${range.end}-${idx}`}
-              variant="outline"
-              size="sm"
-              onClick={() => handleRangeClick(range)}
-              className="text-xs"
-            >
-              {range.start} - {range.end}
-            </Button>
-          ))}
-        </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          Click a range to select the full duration, or enter a custom time below.
-        </p>
-      </div>
+    <div className="grid grid-cols-1 gap-3">
+      {slots.map((slot, idx) => {
+        const isSelected = startTime === slot.start
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="start-time">Start Time</Label>
-          <Input
-            id="start-time"
-            type="time"
-            value={startTime}
-            onChange={(e) => onTimeChange(e.target.value, endTime)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="end-time">End Time</Label>
-          <Input
-            id="end-time"
-            type="time"
-            value={endTime}
-            onChange={(e) => onTimeChange(startTime, e.target.value)}
-          />
-        </div>
-      </div>
+        return (
+          <Button
+            key={`${slot.start}-${idx}`}
+            variant="outline"
+            className={cn(
+              "w-full justify-center py-6 text-base font-medium border-white/10 transition-all duration-200",
+              isSelected
+                ? "bg-white text-white hover:bg-white hover:text-white border-transparent shadow-[0_0_15px_rgba(255,255,255,0.3)] ring-1 ring-white"
+                : "bg-transparent text-gray-300 hover:bg-white/10 hover:text-white hover:border-white/30"
+            )}
+            onClick={() => onTimeChange(slot.start, slot.end)}
+          >
+            {slot.label}
+          </Button>
+        )
+      })}
     </div>
   )
 }
