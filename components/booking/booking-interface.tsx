@@ -12,6 +12,7 @@ import { createBookingAction, getAvailableSlotsAction } from "@/app/actions/book
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Clock, Globe, Video, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
 
 interface BookingInterfaceProps {
     expert: Expert
@@ -149,23 +150,39 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
                         <div className="text-lg font-medium text-gray-200">
                             {date ? format(date, "EEE d") : "Select Date"}
                         </div>
-                        <div className="flex bg-white/5 rounded-lg p-1 px-1">
-                            <Button
-                                variant="ghost"
-                                size="sm"
+                        <div className="flex bg-white/5 rounded-lg p-1 relative isolate">
+                            <button
                                 onClick={() => setIs24Hour(false)}
-                                className={cn("h-7 px-3 text-xs rounded-md transition-all hover:bg-white/5", !is24Hour ? "bg-[#2a2a2a] text-white shadow-sm hover:bg-[#2a2a2a]" : "text-gray-400")}
+                                className={cn(
+                                    "relative z-10 px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200",
+                                    !is24Hour ? "text-white" : "text-gray-400 hover:text-gray-200"
+                                )}
                             >
                                 12h
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
+                                {!is24Hour && (
+                                    <motion.div
+                                        layoutId="active-time-mode"
+                                        className="absolute inset-0 bg-[#2a2a2a] rounded-md shadow-sm -z-10"
+                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                    />
+                                )}
+                            </button>
+                            <button
                                 onClick={() => setIs24Hour(true)}
-                                className={cn("h-7 px-3 text-xs rounded-md transition-all hover:bg-white/5", is24Hour ? "bg-[#2a2a2a] text-white shadow-sm hover:bg-[#2a2a2a]" : "text-gray-400")}
+                                className={cn(
+                                    "relative z-10 px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200",
+                                    is24Hour ? "text-white" : "text-gray-400 hover:text-gray-200"
+                                )}
                             >
                                 24h
-                            </Button>
+                                {is24Hour && (
+                                    <motion.div
+                                        layoutId="active-time-mode"
+                                        className="absolute inset-0 bg-[#2a2a2a] rounded-md shadow-sm -z-10"
+                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                    />
+                                )}
+                            </button>
                         </div>
                     </div>
 
