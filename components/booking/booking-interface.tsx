@@ -119,8 +119,7 @@ export function BookingInterface({ expert }: BookingInterfaceProps) {
                     <div className="flex items-center justify-center">
                         <Calendar
                             mode="single"
-                            //@ts-ignore
-                            date={date}
+                            selected={date}
                             onSelect={setDate}
                             month={month}
                             onMonthChange={setMonth}
