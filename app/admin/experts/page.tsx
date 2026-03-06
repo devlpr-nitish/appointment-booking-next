@@ -43,7 +43,7 @@ export default async function AdminExpertsPage() {
                         <p className="font-medium">{expert.name}</p>
                         {expert.verified && <CheckCircle2 className="h-4 w-4 text-primary" />}
                       </div>
-                      <p className="text-sm text-muted-foreground">{expert.expertise}</p>
+                      <p className="text-sm text-muted-foreground">{expert.email}</p>
                       <div className="flex items-center gap-4 mt-1">
                         <p className="text-xs text-muted-foreground">${expert.hourlyRate}/hr</p>
                         <p className="text-xs text-muted-foreground">{expert.totalSessions} sessions</p>

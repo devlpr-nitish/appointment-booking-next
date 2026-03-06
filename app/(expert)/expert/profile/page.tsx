@@ -2,6 +2,8 @@ import { requireAuth } from "@/lib/auth"
 import { ExpertDashboardHeader } from "@/components/expert/expert-dashboard-header"
 import { ExpertProfileView } from "@/components/profile/expert-profile-view"
 
+export const dynamic = "force-dynamic"
+
 export default async function ExpertProfilePage() {
     const user = await requireAuth()
 

@@ -5,7 +5,7 @@ import { BookingInterface } from "@/components/booking/booking-interface"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { CheckCircle2, Star, Quote } from "lucide-react"
+import { CheckCircle2, Star, Quote } from "lucide-react";
 
 interface BookingPageProps {
     params: Promise<{ id: string }>
@@ -48,7 +48,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
                                             {expert.verified && <CheckCircle2 className="h-5 w-5 text-primary" />}
                                         </h2>
                                         <Badge variant="secondary" className="mt-1">
-                                            {expert.expertise}
+                                            {(expert as any).categories?.[0]?.name || "Expert"}
                                         </Badge>
                                     </div>
                                 </div>

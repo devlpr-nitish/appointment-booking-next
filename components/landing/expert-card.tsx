@@ -24,7 +24,7 @@ export function ExpertCard({ expert }: ExpertCardProps) {
               {expert.verified && <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />}
             </div>
             <Badge variant="secondary" className="text-xs">
-              {expert.expertise}
+              {(expert as any).categories?.[0]?.name || (expert as any).category?.name || "Expert"}
             </Badge>
           </div>
         </div>

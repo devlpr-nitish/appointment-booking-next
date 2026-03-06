@@ -4,12 +4,22 @@ import { cookies } from "next/headers"
 
 // --- Types ---
 
-export type RequestStatus = "OPEN" | "ACCEPTED" | "CLOSED";
+export type RequestStatus = "OPEN" | "ACCEPTED" | "CLOSED" | "CANCELED";
 export type OfferStatus = "PENDING" | "ACCEPTED" | "DECLINED";
 
 export interface Category {
     id: string; // uuid
     name: string;
+}
+
+export interface ExpertInfo {
+    id: number;
+    name: string;
+    email: string;
+    avatar?: string;
+    rating?: number;
+    expertise?: string;
+    reviewCount?: number;
 }
 
 export interface Request {
@@ -18,12 +28,15 @@ export interface Request {
     category_id: string; // uuid
     initial_amount: number;
     description: string;
+    preferred_time?: string;
+    duration?: number; // in minutes
     status: RequestStatus;
     created_at: string;
     updated_at: string;
     category?: Category;
-    user?: any; // Define User type if needed
+    user?: any;
     offers?: Offer[];
+    expires_at?: string;
 }
 
 export interface Offer {
@@ -31,10 +44,20 @@ export interface Offer {
     request_id: string; // uuid
     expert_id: number;
     amount: number;
+    message?: string;
     status: OfferStatus;
     created_at: string;
     updated_at: string;
-    expert?: any; // Define Expert type if needed
+    expert?: ExpertInfo;
+}
+
+export interface ActivityEvent {
+    id: string;
+    type: "offer" | "counter" | "accepted" | "declined" | "request_created" | "request_canceled" | "request_expired";
+    actor: string;
+    amount?: number;
+    message?: string;
+    timestamp: string;
 }
 
 // --- API Functions ---
@@ -63,16 +86,28 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
 }
 
 export async function getCategories(): Promise<Category[]> {
-    const res = await fetch(`${API_URL}/api/categories`); // Public endpoint?
+    const res = await fetch(`${API_URL}/api/categories`);
     if (!res.ok) throw new Error("Failed to fetch categories");
     const data = await res.json();
     return data.data || [];
 }
 
-export async function createRequest(categoryId: string, amount: number, description: string): Promise<Request> {
+export async function createRequest(
+    categoryId: string,
+    amount: number,
+    description: string,
+    preferredTime?: string,
+    duration?: number,
+): Promise<Request> {
     const data = await fetchWithAuth("/api/requests", {
         method: "POST",
-        body: JSON.stringify({ category_id: categoryId, amount, description }),
+        body: JSON.stringify({
+            category_id: categoryId,
+            amount,
+            description,
+            preferred_time: preferredTime,
+            duration,
+        }),
     });
     return data.data;
 }
@@ -83,16 +118,18 @@ export async function getRequest(id: string): Promise<Request> {
 }
 
 export async function getExpertRequests(): Promise<Request[]> {
-    // We need to pass category_id? But backend now fetches from profile.
-    // But wait, my backend logic for GetExpertRequests *required* that I am an expert.
     const data = await fetchWithAuth("/api/expert/requests");
     return data.data;
 }
 
-export async function createOffer(requestId: string, amount: number): Promise<Offer> {
+export async function createOffer(
+    requestId: string,
+    amount: number,
+    message?: string,
+): Promise<Offer> {
     const data = await fetchWithAuth("/api/offers", {
         method: "POST",
-        body: JSON.stringify({ request_id: requestId, amount }),
+        body: JSON.stringify({ request_id: requestId, amount, message }),
     });
     return data.data;
 }
@@ -104,6 +141,29 @@ export async function getRequestOffers(requestId: string): Promise<Offer[]> {
 
 export async function acceptOffer(offerId: string): Promise<void> {
     await fetchWithAuth(`/api/offers/${offerId}/accept`, {
+        method: "POST",
+    });
+}
+
+export async function declineOffer(offerId: string): Promise<void> {
+    await fetchWithAuth(`/api/offers/${offerId}/decline`, {
+        method: "POST",
+    });
+}
+
+export async function counterOffer(
+    offerId: string,
+    amount: number,
+    message?: string,
+): Promise<void> {
+    await fetchWithAuth(`/api/offers/${offerId}/counter`, {
+        method: "POST",
+        body: JSON.stringify({ amount, message }),
+    });
+}
+
+export async function cancelRequest(id: string) {
+    return fetchWithAuth(`${API_URL}/requests/${id}/cancel`, {
         method: "POST",
     });
 }

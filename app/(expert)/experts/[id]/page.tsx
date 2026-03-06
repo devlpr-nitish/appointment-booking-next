@@ -41,7 +41,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                   </div>
 
                   <Badge variant="secondary" className="mb-4">
-                    {expert.expertise}
+                    {(expert as any).categories?.[0]?.name || "Expert"}
                   </Badge>
 
                   <p className="text-muted-foreground leading-relaxed mb-6">{expert.bio}</p>

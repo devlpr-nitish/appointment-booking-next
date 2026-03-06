@@ -45,7 +45,6 @@ export async function getExpertProfile(userId: string): Promise<Expert | null> {
       userId: backendExpert.user_id.toString(),
       name: backendExpert.user?.name || "Unknown",
       email: backendExpert.user?.email || "",
-      expertise: backendExpert?.expertise,
       bio: backendExpert?.bio,
       hourlyRate: backendExpert?.hourly_rate,
       rating: 0,
@@ -64,7 +63,7 @@ export async function getExpertProfile(userId: string): Promise<Expert | null> {
 
 export async function updateExpertProfile(
   userId: string,
-  data: Partial<Pick<Expert, "bio" | "hourlyRate" | "expertise">>,
+  data: Partial<Pick<Expert, "bio" | "hourlyRate">>,
 ): Promise<Expert | null> {
   // Check if we can use an API for this too, but request didn't strictly ask for it yet.
   // Sticking to scope of dynamic stats.
@@ -77,7 +76,6 @@ export async function updateExpertProfile(
 
   if (data.bio !== undefined) expert.bio = data.bio
   if (data.hourlyRate !== undefined) expert.hourlyRate = data.hourlyRate
-  if (data.expertise !== undefined) expert.expertise = data.expertise
 
   return expert
 }

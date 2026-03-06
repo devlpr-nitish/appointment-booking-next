@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { X, DollarSign, User, HandshakeIcon } from "lucide-react";
+import { X, IndianRupee, HandshakeIcon, Sparkles, ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 interface ActionToastProps {
     id: string;
@@ -29,20 +29,23 @@ export function ActionToast({
     onAccept,
     onDecline,
     onDismiss,
-    autoCloseMs = 15000, // 15 seconds default
+    autoCloseMs = 15000,
     type,
 }: ActionToastProps) {
     const router = useRouter();
     const [timeLeft, setTimeLeft] = useState(autoCloseMs / 1000);
+    const [progress, setProgress] = useState(100);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            onDismiss();
-        }, autoCloseMs);
+        const startTime = Date.now();
+        const timer = setTimeout(() => onDismiss(), autoCloseMs);
 
         const interval = setInterval(() => {
-            setTimeLeft((prev) => Math.max(0, prev - 1));
-        }, 1000);
+            const elapsed = Date.now() - startTime;
+            const remaining = Math.max(0, autoCloseMs - elapsed);
+            setTimeLeft(Math.ceil(remaining / 1000));
+            setProgress((remaining / autoCloseMs) * 100);
+        }, 100);
 
         return () => {
             clearTimeout(timer);
@@ -59,82 +62,104 @@ export function ActionToast({
         onDismiss();
     };
 
+    const isRequest = type === "request";
+
     return (
-        <Card className="w-full max-w-md shadow-lg border-2 border-primary/20 animate-in slide-in-from-right">
-            <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
+        <div className={cn(
+            "relative w-full max-w-sm rounded-xl border shadow-xl overflow-hidden",
+            "bg-card backdrop-blur-sm",
+            "animate-in slide-in-from-right duration-300",
+        )}>
+            {/* Progress bar */}
+            <div
+                className={cn(
+                    "absolute top-0 left-0 h-0.5 transition-all duration-100",
+                    isRequest ? "bg-indigo-500" : "bg-emerald-500"
+                )}
+                style={{ width: `${progress}%` }}
+            />
+
+            <div className="p-4">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-2">
-                        {type === "request" ? (
-                            <HandshakeIcon className="h-5 w-5 text-primary" />
-                        ) : (
-                            <DollarSign className="h-5 w-5 text-primary" />
-                        )}
-                        <CardTitle className="text-lg">{title}</CardTitle>
+                        <div className={cn(
+                            "h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                            isRequest
+                                ? "bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400"
+                                : "bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400"
+                        )}>
+                            {isRequest ? (
+                                <HandshakeIcon className="h-4 w-4" />
+                            ) : (
+                                <Sparkles className="h-4 w-4" />
+                            )}
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold leading-tight">{title}</p>
+                            <p className="text-xs text-muted-foreground leading-tight mt-0.5">{description}</p>
+                        </div>
                     </div>
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
+                        className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground hover:text-foreground flex-shrink-0"
                         onClick={onDismiss}
                     >
-                        <X className="h-4 w-4" />
+                        <X className="h-3.5 w-3.5" />
                     </Button>
                 </div>
-                <CardDescription>{description}</CardDescription>
-            </CardHeader>
 
-            <CardContent className="space-y-2 pb-3">
-                {categoryName && (
-                    <div className="flex items-center gap-2">
-                        <Badge variant="secondary">{categoryName}</Badge>
-                    </div>
-                )}
-                {amount !== undefined && (
-                    <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-2xl font-bold">${amount.toFixed(2)}</span>
-                    </div>
-                )}
-                <div className="text-xs text-muted-foreground">
-                    Auto-closes in {timeLeft}s
+                {/* Details */}
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
+                    {categoryName && (
+                        <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                            {categoryName}
+                        </Badge>
+                    )}
+                    {amount !== undefined && (
+                        <div className="flex items-center gap-0.5 text-base font-bold">
+                            <IndianRupee className="h-3.5 w-3.5" />
+                            {amount.toLocaleString("en-IN")}
+                        </div>
+                    )}
+                    <span className="text-xs text-muted-foreground ml-auto">
+                        {timeLeft}s
+                    </span>
                 </div>
-            </CardContent>
 
-            <CardFooter className="flex gap-2 pt-3">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={handleViewDetails}
-                >
-                    View Details
-                </Button>
-                {onDecline && (
+                {/* Action buttons */}
+                <div className="flex gap-1.5">
                     <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1"
-                        onClick={() => {
-                            onDecline();
-                            onDismiss();
-                        }}
+                        className="flex-1 h-7 text-xs gap-1"
+                        onClick={handleViewDetails}
                     >
-                        Decline
+                        <ExternalLink className="h-3 w-3" />
+                        View
                     </Button>
-                )}
-                {onAccept && (
-                    <Button
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => {
-                            onAccept();
-                            onDismiss();
-                        }}
-                    >
-                        Accept
-                    </Button>
-                )}
-            </CardFooter>
-        </Card>
+                    {onDecline && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs text-red-600 border-red-200 hover:bg-red-50 dark:border-red-900 dark:text-red-400"
+                            onClick={() => { onDecline(); onDismiss(); }}
+                        >
+                            Decline
+                        </Button>
+                    )}
+                    {onAccept && (
+                        <Button
+                            size="sm"
+                            className="flex-1 h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                            onClick={() => { onAccept(); onDismiss(); }}
+                        >
+                            Accept
+                        </Button>
+                    )}
+                </div>
+            </div>
+        </div>
     );
 }

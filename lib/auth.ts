@@ -12,7 +12,6 @@ export interface Expert {
     userId: string
     name: string
     email: string
-    expertise: string
     bio: string
     hourlyRate: number
     rating: number

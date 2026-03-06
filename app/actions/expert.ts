@@ -153,7 +153,6 @@ export async function getExpertByIdAction(id: string): Promise<Expert | null> {
             userId: item.user_id?.toString() || "",
             name: item.user?.name || "Unknown Expert",
             email: item.user?.email || "",
-            expertise: item.expertise,
             bio: item.bio,
             hourlyRate: item.hourly_rate,
             rating: 0,
@@ -182,7 +181,8 @@ export async function getExpertProfileAction() {
     const res = await fetch(`${API_BASE_URL}/expert/profile`, {
         headers: {
             "Authorization": `Bearer ${token}`
-        }
+        },
+        cache: "no-store",
     })
 
     const json = await res.json()
@@ -198,18 +198,47 @@ export async function getExpertProfileAction() {
         hourlyRate: backendExpert.hourly_rate,
         totalSessions: backendExpert.total_sessions || 0,
         userId: backendExpert.user_id,
-        // user: backendExpert.user // Assuming user object is compatible or needs mapping too
+        // Also attach multi-category IDs returned by the backend
+        category_ids: json.data.category_ids || [],
     }
 
     return { success: true, data: { ...json.data, expert } }
 }
 
-export async function updateExpertProfileAction(data: Partial<Expert>) {
+export async function getExpertCategoryIdsAction() {
+    const cookieStore = await cookies()
+    const token = cookieStore.get("token")?.value
+    if (!token) return []
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/expert/profile`, {
+            headers: { "Authorization": `Bearer ${token}` },
+            cache: "no-store",
+        })
+        if (!res.ok) return []
+        const json = await res.json()
+        const backendExpert = json?.data?.expert
+        if (!backendExpert) return []
+
+        const catIds: string[] = []
+        if (json.data.category_ids?.length > 0) {
+            catIds.push(...json.data.category_ids)
+        } else if (backendExpert.category_id) {
+            catIds.push(backendExpert.category_id)
+        }
+        return catIds
+    } catch {
+        return []
+    }
+}
+
+export async function updateExpertProfileAction(data: Partial<Expert> & { categoryIds?: string[] }) {
     const cookieStore = await cookies()
     const token = cookieStore.get("token")?.value
 
     try {
         const payload: any = { ...data }
+
         // Map frontend camelCase to backend snake_case
         if (data.hourlyRate !== undefined) {
             payload.hourly_rate = data.hourlyRate
@@ -219,10 +248,14 @@ export async function updateExpertProfileAction(data: Partial<Expert>) {
             payload.category_id = data.categoryId
             delete payload.categoryId
         }
-        // Add other fields if needed, e.g. totalSessions -> total_sessions (though usually read-only)
+        // Map multi-category IDs
+        if ((data as any).categoryIds !== undefined) {
+            payload.category_ids = (data as any).categoryIds
+            delete payload.categoryIds
+        }
 
         const res = await fetch(`${API_BASE_URL}/expert/profile`, {
-            method: "PUT",
+            method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
@@ -241,13 +274,11 @@ export async function updateExpertProfileAction(data: Partial<Expert>) {
 
         revalidatePath("/expert/profile")
 
-        // Map response back if needed, or just return success
-        // Assuming the component re-fetches profile anyway or we can return mapped data
-        const backendExpert = json.data
+        const backendExpert = json.data?.expert || json.data
         const expert = {
             ...backendExpert,
-            hourlyRate: backendExpert.hourly_rate,
-            userId: backendExpert.user_id,
+            hourlyRate: backendExpert?.hourly_rate,
+            userId: backendExpert?.user_id,
         }
 
         return { success: true, data: expert }
